@@ -1,0 +1,6 @@
+/test
+up.ps1
+
+.DS_Store  
+*.log
+.env
