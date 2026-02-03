@@ -2,7 +2,7 @@
 imprimir_info() {
 	nombre_equipo=$(hostname)
 	ip_actual=$(hostname -I | cut -d ' ' -f 2)
-	espacio_disco=$(df -h | grep root | cut -d ' ' -f 7)
+	espacio_disco=$(df -kh . | grep / | awk -F ' ' '{ print $4 }' )
 
 
 	if [[ "$ip_actual" = '' ]]; then
