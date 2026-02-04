@@ -15,5 +15,5 @@ imprimir_info() {
 	NC='\033[0m'
 
 	echo -e "${RED}Nombre equipo${NC}\t | ${BLUE}Ip actual${NC}\t | ${YELLOW}Disco Total/Libre${NC}"
-	echo $nombre_equipo, $ip_actual, $espacio_disco"GB"
+	echo $nombre_equipo, $ip_actual, $espacio_disco
 }
