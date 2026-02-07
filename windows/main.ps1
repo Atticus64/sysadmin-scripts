@@ -1,5 +1,5 @@
 
-. "$PSScriptRoot\functions_windows.ps1"
+. "$PSScriptRoot\practicas\practica1.ps1"
 
 Write-Host "Checar estatus de Servidor"
 Write-Host "--------------------------" 
@@ -28,6 +28,7 @@ switch ($opcion) {
         $remoteServer = Read-Host -Prompt "Ingresa el nombre o IP del servidor remoto"
         Write-Host "Checando Servidor remoto: $remoteServer ..."
         $user = Read-Host -Prompt "Ingresa el nombre de usuario"
+        Write-Host $user
         #$password = Read-Host -Prompt "Ingresa la contrasena" -As
         #$securePassword = ConvertTo-SecureString $password -AsPlainText -Force
 
