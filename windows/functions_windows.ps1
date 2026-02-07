@@ -1,6 +1,6 @@
 
 Function Write-WColor ($color, $text) {
-	Write-Host -ForegroundColor $color $text -NoNewLine
+    Write-Host -ForegroundColor $color $text -NoNewLine
 }
 
 Function GetIpAddress($index) {
@@ -13,4 +13,25 @@ Function CheckWindowsFeature($name) {
     return $feature.Installed
 }
 
-CheckWindowsFeature "DHCP"
+Function ValidIpAddress($ip) {
+    $ipv4Regex = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+    $isValid = $ip -match $ipv4Regex
+
+    return $isValid 
+} 
+
+Function PromptForValidIpAddress() {
+    $inputIp = Read-Host "Ingresa una direccion IP para validar"  
+    $validation = ValidIpAddress $inputIp
+    
+    while (-not $validation) {
+        Write-Host "Direccion IP invalida. Por favor ingresa una direccion IP valida."
+        $inputIp = Read-Host "Ingresa una direccion IP para validar"  
+        $validation = ValidIpAddress $inputIp
+    }                       
+
+    return $inputIp
+}    
+
+
+
