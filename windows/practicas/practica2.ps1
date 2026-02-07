@@ -1,20 +1,21 @@
 
 # Practica DHCP Server
+. "$PSScriptRoot\..\functions_windows.ps1"
 
 Function InstallDhcpServer() {
 
     if (-not (CheckWindowsFeature "DHCP")) {
-        Write-WColor "Green" "Instalando DHCP Server..."
+        Write-WColor Green "Instalando DHCP Server..."
         #Install-WindowsFeature DHCP -IncludeManagementTools
     } else {
-        Write-WColor "Yellow" "DHCP Server ya esta instalado."  
+        Write-WColor Yellow "DHCP Server ya esta instalado."  
     }
 
 
 }
 
-Function ConfigureDhcpServer() {
-    Write-WColor "Green" "Configurando DHCP Server..."
+Function ConfigureDhcpServer {
+    Write-WColor Green "Configurando DHCP Server..."
 
     New-NetIPAddress -IPAddress 10.0.0.3 -InterfaceAlias "Ethernet" -DefaultGateway 10.0.0.1 -AddressFamily IPv4 -PrefixLength 24
     Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 10.0.0.2
