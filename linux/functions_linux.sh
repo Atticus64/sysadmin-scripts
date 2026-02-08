@@ -2,7 +2,7 @@
 input() {
     read -p "$1" input
 
-    return $input  
+    echo $input  
 }
 
 valid_ipaddr() {
