@@ -70,7 +70,7 @@ Function ConfigureDhcpServer () {
         Set-DhcpServerv4Scope -Name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
     }
 
-    $scopeId = (Get-DhcpServerv4Scope -Name $nombreScope).ScopeId
+    $scopeId = (Get-DhcpServerv4Scope).ScopeId
     
     Set-DhcpServerv4OptionValue -OptionID 3 -Value $puertaEnlace -ScopeID $scopeId -ComputerName $env:COMPUTERNAME
     #Add-DhcpServerv4ExclusionRange -ScopeID 10.0.0.0 -StartRange 10.0.0.1 -EndRange 10.0.0.15
