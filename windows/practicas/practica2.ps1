@@ -53,7 +53,7 @@ Function ConfigureDhcpServer () {
     #netsh dhcp add securitygroups
     Restart-Service dhcpserver
     
-    Add-DhcpServerInDC -IPAddress $ipEstatica
+    Add-DhcpServerInDC -DnsName "DHCP.windows.server.local" -IPAddress $ipEstatica
     Get-DhcpServerInDC
     
     Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
