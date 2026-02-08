@@ -1,4 +1,35 @@
 
+valid_ipaddr() {
+    install_requred_package "ipcalc"
+    local ip=$1
+
+    ipcalc -cs $ip 
+    # regresando el status de la operacion ipcalc
+    return $?
+}
+
+check_package_present($name) {
+    local message=$(rpm -q $name 2>&1)
+
+    if [[ $message =~ "not installed" ]]; then
+        return 1
+    else 
+        return 0
+    fi 
+}
+
+install_requred_package($name) {
+    if ! check_package_present $name; then
+        echo "Instalando paquete $name"
+        sudo dnf install -y $name --quiet 
+        if [ $? -ne 0 ]; then
+            echo "Error al instalar el paquete $name"
+            exit 1
+        fi
+    fi
+}
+
+
 imprimir_info() {
 	nombre_equipo=$(hostname)
 	ip_actual=$(hostname -I | cut -d ' ' -f 2)
