@@ -5,6 +5,7 @@ install_dhcp_server() {
 
     #check_dhcp=$(check_package_present "dhcp-server")
     #echo $check_dhcp
+    install_required_package "ipcalc"
 
     if ! check_package_present "dhcp-server"; then
         echo "No esta instalado"
@@ -25,6 +26,37 @@ install_dhcp_server() {
 configurar_dhcp_server() {
     local nombreScope=$(input "Introduce el nombre del scope: ")
     echo "Configurando el servidor DHCP con el scope $nombreScope..."
+
+    con_name=$(nmcli con show enp0s8 | grep interface-name | awk -F ' ' '{ print $2}')
+    address=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará el servidor DHCP: ") 
+    netmask=$(get_valid_ipaddr "Ingresa el prefijo (24) de red:")
+    gateway=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará al Gateway: ") 
+    mask=$(get_valid_ipaddr "Ingresa la mascara de subred: ")
+    rango_inicial=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango inicial: ")
+    rango_final=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango final: ")
+    network=$(ipcalc -n $address/$netmask | cut -d '=' -f2 )
+
+    sudo nmcli con mod $con_name ipv4.method manual
+    sudo nmcli con mod $con_name ipv4.addresses $address"/"$netmask 
+    sudo nmcli con mod $con_name ipv4.gateway $gateway
+
+    sudo systemctl restart NetworkManager
+
+    sudo systemctl enable dhcpd
+
+    mv /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf-$(date +%Y%m%d%H%M%S).bak
+
+    cat <<EOF > /etc/dhcp/dhcpd.conf
+    default-lease-time 600;
+    max-lease-time 7200;
+    option domain-name-servers 8.8.8.8, 8.8.4.4;
+
+    subnet $network netmask $mask {
+      range $rango_inicial $rango_final;
+      option routers $gateway;
+    }
+EOF
+
 }
 
 install_dhcp_server
