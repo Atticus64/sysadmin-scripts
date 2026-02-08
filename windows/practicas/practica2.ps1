@@ -46,21 +46,33 @@ Function ConfigureDhcpServer () {
     $rangoFinal = PromptForValidIpAddress "Ingresa la direccion IP final para el rango DHCP"
     $mascaraSubred = PromptForValidIpAddress "Ingresa la mascara de subred para el rango DHCP"
 
-    New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet" -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
+    if ((Get-NetIPAddress -InterfaceIndex 7 -ErrorAction SilentlyContinue) -eq "") {
+        New-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
+    } else {
+        Set-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
+    }
+
 
     #Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses $ipEstatica
     
     #netsh dhcp add securitygroups
     Restart-Service dhcpserver
+    #$nombre = hostname
     
-    Add-DhcpServerInDC -DnsName "DHCP.windows.server.local" -IPAddress $ipEstatica
-    Get-DhcpServerInDC
     
     Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
     
     #Set-DhcpServerv4DnsSetting -ComputerName "DHCP1.corp.contoso.com" -DynamicUpdates "Always" -DeleteDnsRRonLeaseExpiry $True
+
+    if (-not (Get-DhcpServerv4Scope -ErrorAction SilentlyContinue)) {
+        Add-DhcpServerv4Scope -name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
+    } else { 
+        Set-DhcpServerv4Scope -Name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
+    }
+
+    $scopeId = (Get-DhcpServerv4Scope -Name $nombreScope).ScopeId
     
-    Add-DhcpServerv4Scope -name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
+    Set-DhcpServerv4OptionValue -OptionID 3 -Value $puertaEnlace -ScopeID $scopeId -ComputerName $env:COMPUTERNAME
     #Add-DhcpServerv4ExclusionRange -ScopeID 10.0.0.0 -StartRange 10.0.0.1 -EndRange 10.0.0.15
     #Set-DhcpServerv4OptionValue -OptionID 3 -Value 10.0.0.1 -ScopeID 10.0.0.0 -ComputerName DHCP1.corp.contoso.com
     #Set-DhcpServerv4OptionValue -DnsDomain corp.contoso.com -DnsServer 10.0.0.2
