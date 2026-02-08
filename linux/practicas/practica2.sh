@@ -8,21 +8,23 @@ install_dhcp_server() {
 
     if ! check_package_present "dhcp-server"; then
         echo "No esta instalado"
-        #install_required_package "dhcp-server"
-        #if [[ $? -eq 0 ]]; then
-        #    echo "Paquete dhcp-server instalado correctamente"
-        #else 
-        #    echo "Error al instalar el paquete dhcp-server"
-        #    exit 1
-        #fi
+        install_required_package "dhcp-server"
+        if [[ $? -eq 0 ]]; then
+            echo "Paquete dhcp-server instalado correctamente"
+        else 
+            echo "Error al instalar el paquete dhcp-server"
+            exit 1
+        fi
     else 
         echo "El paquete dhcp-server ya está instalado"
     fi
 
+    configurar_dhcp_server
 }
 
 configurar_dhcp_server() {
-    #local nombreScope=$(input "Introduce el nombre del scope: ")
+    local nombreScope=$(input "Introduce el nombre del scope: ")
+    echo "Configurando el servidor DHCP con el scope $nombreScope..."
 }
 
 install_dhcp_server
