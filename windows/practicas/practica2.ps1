@@ -47,7 +47,7 @@ Function ConfigureDhcpServer () {
     $mascaraSubred = PromptForValidIpAddress "Ingresa la mascara de subred para el rango DHCP"
 
     if ((Get-NetIPAddress -InterfaceIndex 7 -ErrorAction SilentlyContinue) -eq "") {
-                New-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
+        New-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
     } else {
 		Get-NetIPAddress -InterfaceIndex 7 -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
 		New-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
@@ -69,7 +69,7 @@ Function ConfigureDhcpServer () {
         Add-DhcpServerv4Scope -name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
     } else { 
     	$scopeIdToDelete = (Get-DhcpServerv4Scope).ScopeId
-		Remove-DhcpServerv4Scope -ScopeId $scopeIdToDelete -Confirm:$false	
+		Remove-DhcpServerv4Scope -ScopeId $scopeIdToDelete -Confirm:$false -Force
         Add-DhcpServerv4Scope -name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
     }
 
