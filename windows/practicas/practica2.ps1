@@ -6,10 +6,22 @@ Function InstallDhcpServer() {
 
     if (-not (CheckWindowsFeature "DHCP")) {
         Write-WColor Green "Instalando DHCP Server..."
-        #Install-WindowsFeature DHCP -IncludeManagementTools
+        Install-WindowsFeature DHCP -IncludeManagementTools
+
+        $validInst = CheckWindowsFeature "DHCP"
+        if ($validInst) {
+            Write-WColor Green "DHCP Server instalado correctamente."  
+            ConfigureDhcpServer
+        } else {
+            Write-WColor Red "Error al instalar DHCP Server."  
+            exit 1
+        }
+
+
     } else {
         Write-WColor Yellow "DHCP Server ya esta instalado."  
     }
+
 
 
 }
