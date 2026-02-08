@@ -28,12 +28,12 @@ get_valid_ipaddr() {
 check_package_present() {
     name=$1
     
-    rpm -q $name 2>&1
+    rpm -q $name 2>&1 > /dev/null
 }
 
 install_required_package() {
     name=$1
-    if [[ $(check_package_present $name) == "not installed" ]]; then
+    if ! check_package_present $name; then
         # "Instalando paquete $name"
         sudo dnf install -y $name --quiet 
         if [ $? -ne 0 ]; then
