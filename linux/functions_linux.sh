@@ -6,7 +6,7 @@ input() {
 }
 
 valid_ipaddr() {
-    install_requred_package "ipcalc"
+    install_required_package "ipcalc"
     local ip=$1
 
     # regresando el status de la operacion ipcalc
@@ -21,10 +21,10 @@ valid_ipaddr() {
 get_valid_ipaddr() {
     local ip
     local prompt=${1:-"Ingresa una dirección IPv4 válida: "}
-    ip=$(input $prompt)
+    ip=$(input "$prompt")
     while [[ $(valid_ipaddr $ip) == "error" ]]; do
         echo "La dirección IP ingresada no es válida. Por favor, inténtalo de nuevo."
-        ip=$(input $prompt) 
+        ip=$(input "$prompt") 
     done
 }
 
