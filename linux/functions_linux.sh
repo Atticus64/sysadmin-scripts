@@ -1,13 +1,22 @@
 
+input() {
+    local prompt=$1
+    echo $1
+    read input
+
+    return $input  
+}
+
 valid_ipaddr() {
     install_requred_package "ipcalc"
     local ip=$1
 
     # regresando el status de la operacion ipcalc
-    if [[ipcalc -cs $ip]]; then
-        return 0
+    ipcalc -cs $ip
+    if [ $? -eq 0 ]; then
+        echo "ok"
     else 
-        return 1
+        echo "error"
     fi 
 }
 
@@ -16,15 +25,15 @@ check_package_present() {
     local message=$(rpm -q $name 2>&1)
 
     if [[ $message =~ "not installed" ]]; then
-        return 1
+        echo "not installed"
     else 
-        return 0
+        echo "installed"
     fi 
 }
 
 install_requred_package() {
     name=$1
-    if ! check_package_present $name; then
+    if [[ $(check_package_present $name) == "not installed" ]]; then
         echo "Instalando paquete $name"
         sudo dnf install -y $name --quiet 
         if [ $? -ne 0 ]; then
