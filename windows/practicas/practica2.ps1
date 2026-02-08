@@ -49,7 +49,7 @@ Function ConfigureDhcpServer () {
     if ((Get-NetIPAddress -InterfaceIndex 7 -ErrorAction SilentlyContinue) -eq "") {
         New-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
     } else {
-        Set-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -AddressFamily IPv4 -PrefixLength $longitudPrefijo
+        Set-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -PrefixLength $longitudPrefijo -DefaultGateway $puertaEnlace
     }
 
 
