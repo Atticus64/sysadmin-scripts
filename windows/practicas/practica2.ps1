@@ -6,20 +6,24 @@ Function InstallDhcpServer() {
 
     if (-not (CheckWindowsFeature "DHCP")) {
         Write-WColor Green "Instalando DHCP Server..."
+        Write-Host ""
         Install-WindowsFeature DHCP -IncludeManagementTools
 
         $validInst = CheckWindowsFeature "DHCP"
         if ($validInst) {
             Write-WColor Green "DHCP Server instalado correctamente."  
+            Write-Host ""
             #ConfigureDhcpServer
         } else {
             Write-WColor Red "Error al instalar DHCP Server."  
+            Write-Host ""
             exit 1
         }
 
 
     } else {
         Write-WColor Yellow "DHCP Server ya esta instalado."  
+        Write-Host ""
     }
 
 
@@ -31,6 +35,7 @@ Function InstallDhcpServer() {
 
 Function ConfigureDhcpServer () {
     Write-WColor Green "Configurando DHCP Server..."
+    Write-Host ""
 
     $ipEstatica = PromptForValidIpAddress "Ingresa la direccion IP estatica para el servidor DHCP"
     $puertaEnlace = PromptForValidIpAddress "Ingresa la direccion IP del gateway para el servidor DHCP"
