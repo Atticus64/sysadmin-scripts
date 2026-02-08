@@ -8,7 +8,8 @@ valid_ipaddr() {
     return $?
 }
 
-check_package_present($name) {
+check_package_present() {
+    name=$1
     local message=$(rpm -q $name 2>&1)
 
     if [[ $message =~ "not installed" ]]; then
@@ -18,7 +19,8 @@ check_package_present($name) {
     fi 
 }
 
-install_requred_package($name) {
+install_requred_package() {
+    name=$1
     if ! check_package_present $name; then
         echo "Instalando paquete $name"
         sudo dnf install -y $name --quiet 
