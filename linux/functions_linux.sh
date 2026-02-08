@@ -1,8 +1,6 @@
 
 input() {
-    local prompt=$1
-    echo $1
-    read input
+    read -p "$1" input
 
     return $input  
 }
