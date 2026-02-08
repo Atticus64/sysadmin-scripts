@@ -20,18 +20,16 @@ Function ValidIpAddress($ip) {
     return $isValid 
 } 
 
-Function PromptForValidIpAddress($mensage = "Ingresa una direccion IP para validar") {
-    $inputIp = Read-Host $mensage
+Function PromptForValidIpAddress($msg = "Ingresa una direccion IP para validar") {
+    $inputIp = Read-Host $msg
     $validation = ValidIpAddress $inputIp
     
     while (-not $validation) {
         Write-Host "Direccion IP invalida. Por favor ingresa una direccion IP valida."
-        $inputIp = Read-Host "Ingresa una direccion IP para validar"  
+        $inputIp = Read-Host $msg
         $validation = ValidIpAddress $inputIp
     }                       
 
     return $inputIp
 }    
-
-
 
