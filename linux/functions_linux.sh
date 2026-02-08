@@ -3,9 +3,12 @@ valid_ipaddr() {
     install_requred_package "ipcalc"
     local ip=$1
 
-    ipcalc -cs $ip 
     # regresando el status de la operacion ipcalc
-    return $?
+    if [[ipcalc -cs $ip]]; then
+        return 0
+    else 
+        return 1
+    fi 
 }
 
 check_package_present() {
