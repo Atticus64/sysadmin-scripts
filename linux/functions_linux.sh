@@ -18,6 +18,16 @@ valid_ipaddr() {
     fi 
 }
 
+get_valid_ipaddr() {
+    local ip
+    local prompt=${1:-"Ingresa una dirección IPv4 válida: "}
+    ip=$(input $prompt)
+    while [[ $(valid_ipaddr $ip) == "error" ]]; do
+        echo "La dirección IP ingresada no es válida. Por favor, inténtalo de nuevo."
+        ip=$(input $prompt) 
+    done
+}
+
 check_package_present() {
     name=$1
     local message=$(rpm -q $name 2>&1)
@@ -29,16 +39,17 @@ check_package_present() {
     fi 
 }
 
-install_requred_package() {
+install_required_package() {
     name=$1
     if [[ $(check_package_present $name) == "not installed" ]]; then
-        echo "Instalando paquete $name"
+        # "Instalando paquete $name"
         sudo dnf install -y $name --quiet 
         if [ $? -ne 0 ]; then
             echo "Error al instalar el paquete $name"
-            exit 1
         fi
     fi
+
+    echo "ok"
 }
 
 
