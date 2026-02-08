@@ -29,7 +29,7 @@ configurar_dhcp_server() {
 
     con_name=$(nmcli con show enp0s8 | grep interface-name | awk -F ' ' '{ print $2}')
     address=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará el servidor DHCP: ") 
-    netmask=$(get_valid_ipaddr "Ingresa el prefijo (24) de red:")
+    netmask=$(read -p "Ingresa el prefijo (24) de red:")
     gateway=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará al Gateway: ") 
     mask=$(get_valid_ipaddr "Ingresa la mascara de subred: ")
     rango_inicial=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango inicial: ")
