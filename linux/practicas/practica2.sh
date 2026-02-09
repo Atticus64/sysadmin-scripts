@@ -38,7 +38,11 @@ configurar_dhcp_server() {
 
     sudo nmcli con mod $con_name ipv4.addresses $address"/"$netmask ipv4.gateway $gateway ipv4.method manual 
 
+    sudo ifconfig $con_name $address"/"$netmask 
+    
     sudo systemctl enable dhcpd
+
+    sudo systemctl restart dhcpd
 
     mv /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf-$(date +%Y%m%d%H%M%S).bak
 
