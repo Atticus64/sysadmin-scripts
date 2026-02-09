@@ -36,11 +36,7 @@ configurar_dhcp_server() {
     rango_final=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango final: ")
     network=$(ipcalc -n $address/$netmask | cut -d '=' -f2 )
 
-    sudo nmcli con mod $con_name ipv4.method manual
-    sudo nmcli con mod $con_name ipv4.addresses $address"/"$netmask 
-    sudo nmcli con mod $con_name ipv4.gateway $gateway
-
-    sudo systemctl restart NetworkManager
+    sudo nmcli con mod $con_name ipv4.addresses $address"/"$netmask ipv4.gateway $gateway ipv4.method manual 
 
     sudo systemctl enable dhcpd
 
