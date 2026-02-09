@@ -28,13 +28,13 @@ configurar_dhcp_server() {
     echo "Configurando el servidor DHCP con el scope $nombreScope..."
 
     con_name=$(nmcli con show enp0s8 | grep interface-name | awk -F ' ' '{ print $2}')
-    network=$(ipcalc -n $address/$netmask | cut -d '=' -f2 )
     address=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará el servidor DHCP: ") 
     netmask=$(input "Ingresa el prefijo (24) de red:")
     gateway=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará al Gateway: ") 
     mask=$(get_valid_ipaddr "Ingresa la mascara de subred: ")
     rango_inicial=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango inicial: ")
     rango_final=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango final: ")
+    network=$(ipcalc -n $address/$netmask | cut -d '=' -f2 )
 
     sudo nmcli con mod $con_name ipv4.method manual
     sudo nmcli con mod $con_name ipv4.addresses $address"/"$netmask 
