@@ -30,7 +30,6 @@ Function InstallDhcpServer() {
     ConfigureDhcpServer
 
 
-
 }
 
 Function ConfigureDhcpServer () {
@@ -80,6 +79,110 @@ Function ConfigureDhcpServer () {
     #Set-DhcpServerv4OptionValue -DnsDomain corp.contoso.com -DnsServer 10.0.0.2
 }
 
-InstallDhcpServer
+Function Get-DhcpInstallation {
+    Write-WColor Cyan "Verificando instalación de DHCP Server..."
+    Write-Host ""
+
+    if (CheckWindowsFeature "DHCP") {
+        Write-WColor Green "✔ DHCP Server está instalado"
+    } else {
+        Write-WColor Red "✖ DHCP Server NO está instalado"
+    }
+    Write-Host ""
+}
+
+Function Install-DhcpDependencies {
+    Write-WColor Cyan "Instalando DHCP Server..."
+    Write-Host ""
+
+    if (-not (CheckWindowsFeature "DHCP")) {
+        Install-WindowsFeature DHCP -IncludeManagementTools
+
+        if (CheckWindowsFeature "DHCP") {
+            Write-WColor Green "✔ DHCP Server instalado correctamente"
+        } else {
+            Write-WColor Red "✖ Error al instalar DHCP Server"
+            exit 1
+        }
+    } else {
+        Write-WColor Yellow "DHCP Server ya está instalado"
+    }
+
+    Write-Host ""
+}
+
+Function Get-Monitor-Dhcp {
+    Write-WColor Cyan "Monitoreando DHCP Server (Ctrl+C para salir)..."
+    Write-Host ""
+
+    Get-EventLog -LogName System -Source DHCPServer -Newest 20 -Wait
+}
+
+Function Show-Help {
+@"
+Uso:
+  practica2.ps1 [OPCIÓN]
+
+Opciones:
+  --check        Verifica si el rol DHCP Server está instalado.
+  --install      Instala el rol DHCP Server y herramientas administrativas.
+  --config       Configura el servidor DHCP solicitando los datos de red.
+  --monitor      Monitorea eventos del servicio DHCP.
+  --help         Muestra esta ayuda y sale.
+
+Sin opciones:
+  Ejecuta el script en modo interactivo mostrando un menú.
+
+Ejemplos:
+  .\practica2.ps1 --check
+  .\practica2.ps1 --install
+  .\practica2.ps1 --config
+  .\practica2.ps1 --monitor
+  .\practica2.ps1
+"@
+}
 
 
+Function Show-Menu {
+    Write-Host ""
+    Write-Host "========= MENÚ DHCP ========="
+    Write-Host "1) Verificar instalación"
+    Write-Host "2) Instalar DHCP Server"
+    Write-Host "3) Configurar DHCP"
+    Write-Host "4) Monitorear DHCP"
+    Write-Host "5) Salir"
+    Write-Host "============================="
+}
+
+Function Show-Interactive-Menu () {
+    while ($true) {
+        Show-Menu
+        $option = Read-Host "Selecciona una opción"
+
+        switch ($option) {
+            1 { Get-DhcpInstallation }
+            2 { Install-DhcpDependencies }
+            3 { ConfigureDhcpServer }
+            4 { Get-Monitor-Dhcp }
+            5 { Write-Host "Saliendo..."; exit 0 }
+            default { Write-Host "Opción inválida" }
+        }
+    }
+}
+
+Function Main($arguments) {
+    switch ($arguments[0]) {
+        "--check"   { Get-DhcpInstallation }
+        "--install" { Install-DhcpDependencies }
+        "--config"  { ConfigureDhcpServer }
+        "--monitor" { Get-Monitor-Dhcp }
+        "--help"    { Show-Help }
+        $null       { Show-Interactive-Menu }
+        default {
+            Write-Host "Opción no válida. Usa --help para ver las opciones disponibles."
+            exit 1
+        }
+    }
+}
+
+Main $args
