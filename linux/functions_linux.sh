@@ -67,6 +67,17 @@ ip_in_network() {
     ipcalc -c "$ip" "$network/$prefix" >/dev/null 2>&1
 }
 
+ip_in_network() {
+    local ip=$1
+    local network=$2
+    local prefix=$3
+
+    local ip_network
+    ip_network=$(ipcalc -n "$ip/$prefix" | cut -d '=' -f2)
+
+    [[ "$ip_network" == "$network" ]]
+}
+
 validate_dhcp_range() {
     local server_ip=$1
     local network=$2
