@@ -75,6 +75,7 @@ configurar_dhcp_server() {
 
     validate_dhcp_range \
         "$address" \
+        "$network" \
         "$prefix" \
         "$rango_inicial" \
         "$rango_final" \

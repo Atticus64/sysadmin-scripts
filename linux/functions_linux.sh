@@ -69,13 +69,12 @@ ip_in_network() {
 
 validate_dhcp_range() {
     local server_ip=$1
-    local prefix=$2
-    local start_ip=$3
-    local end_ip=$4
-    local gateway=$5
+    local network=$2
+    local prefix=$3
+    local start_ip=$4
+    local end_ip=$5
+    local gateway=$6
 
-    local network
-    network=$(get_network "$server_ip" "$prefix")
 
     for ip in "$start_ip" "$end_ip" "$gateway"; do
         if ! ip_in_network "$ip" "$network" "$prefix"; then
