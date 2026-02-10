@@ -46,10 +46,10 @@ Function ConfigureDhcpServer () {
     $mascaraSubred = PromptForValidIpAddress "Ingresa la mascara de subred para el rango DHCP"
 
     if ((Get-NetIPAddress -InterfaceAlias "Ethernet 2" -ErrorAction SilentlyContinue) -eq "") {
-        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 --prefixlength (Get-PrefixLengthFromMask $mascaraSubred)
+        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength (Get-PrefixLengthFromMask $mascaraSubred)
     } else {
 		Get-NetIPAddress -InterfaceAlias "Ethernet 2" -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
-		New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 --prefixlength (Get-PrefixLengthFromMask $mascaraSubred)
+		New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength (Get-PrefixLengthFromMask $mascaraSubred)
     }
 
 
