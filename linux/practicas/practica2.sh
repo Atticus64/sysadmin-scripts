@@ -74,10 +74,10 @@ configurar_dhcp_server() {
 
 
     validate_dhcp_range \
-        "$server_ip" \
+        "$address" \
         "$prefix" \
-        "$start_range" \
-        "$end_range" \
+        "$rango_inicial" \
+        "$rango_final" \
         "$gateway" || exit 1
 
     dns_servers=$(get_dns_servers)
