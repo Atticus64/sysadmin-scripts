@@ -28,7 +28,7 @@ configurar_dhcp_server() {
     echo "Configurando el servidor DHCP con el scope $nombreScope..."
 
     device="enp0s8"
-    con_name=$(nmcli -t -f DEVICE, NAME con show --active | grep $device: | cut -d ':' -f2)
+    con_name=$(nmcli -t -f DEVICE,NAME con show --active | grep $device: | cut -d ':' -f2)
     address=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará el servidor DHCP: ") 
     gateway=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará al Gateway: ") 
     mask=$(get_valid_ipaddr "Ingresa la mascara de subred: ")
