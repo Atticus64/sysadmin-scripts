@@ -43,7 +43,7 @@ install_required_package() {
     name=$1
     if ! check_package_present $name; then
         # "Instalando paquete $name"
-        sudo dnf install -y $name --quiet 
+        sudo dnf install -y $name --quiet > /dev/null 2>&1 
         if [ $? -ne 0 ]; then
             echo "Error al instalar el paquete $name"
             return 1
