@@ -10,8 +10,16 @@ valid_ipaddr() {
     local ip=$1
 
     # regresando el status de la operacion ipcalc
-    ipcalc -cs $ip 
+    ipcalc -cs "$ip" || return 1
+
+    case "$ip" in
+        0.0.0.0) return 1 ;;   
+        255.255.255.255) return 1 ;;   
+        127.*)   return 1 ;;   
+        *)       return 0 ;;
+    esac
 }
+
 
 get_valid_ipaddr() {
     local ip
