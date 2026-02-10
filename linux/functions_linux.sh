@@ -56,7 +56,7 @@ install_required_package() {
 get_network() {
     local ip=$1
     local prefix=$2
-    ipcalc -n "$ip/$prefix" | awk -F= '/Network/ {print $2}'
+    ipcalc -n "$ip/$prefix" | cut -d '=' -f2
 }
 
 ip_in_network() {
