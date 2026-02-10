@@ -32,6 +32,73 @@ Function InstallDhcpServer() {
 
 }
 
+Function Get-Valid-DhcpNetworkConfig($ServerIp, $StartRange, $EndRange, $SubnetMask) {
+    
+    $serverInt = Convert-IpToInt $ServerIp
+    $startInt  = Convert-IpToInt $StartRange
+    $endInt    = Convert-IpToInt $EndRange
+    $maskInt   = Convert-MaskToInt $SubnetMask
+
+    $networkInt   = $serverInt -band $maskInt
+    $broadcastInt = $networkInt -bor (-bnot $maskInt)
+
+
+    if ($startInt -gt $endInt) {
+        Write-Host "[ERROR] El rango inicial es mayor que el rango final"
+        return $false
+    }
+
+    foreach ($ip in @($serverInt, $startInt, $endInt)) {
+        if (($ip -band $maskInt) -ne $networkInt) {
+            Write-Host "[ERROR] Una IP no pertenece a la misma red"
+            return $false
+        }
+    }
+
+    if ($startInt -le $networkInt -or $endInt -ge $broadcastInt) {
+        Write-Host "[ERROR] El rango incluye IP de red o broadcast"
+        return $false
+    }
+
+    Write-Host "[OK] La configuración de red DHCP es válida"
+    return $true
+}
+
+
+Function PromptForDnsServers {
+    while ($true) {
+        $dnsInput = Read-Host "Ingresa los DNS servers (separados por coma)"
+        $dnsServers = $dnsInput -split "," | ForEach-Object { $_.Trim() }
+
+        $valid = $true
+        foreach ($dns in $dnsServers) {
+            if (-not (Test-Connection -ComputerName $dns -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
+                Write-Host "[ERROR] DNS inválido: $dns"
+                $valid = $false
+                break
+            }
+        }
+
+        if ($valid -and $dnsServers.Count -gt 0) {
+            return $dnsServers
+        }
+    }
+}
+
+
+Function PromptForLeaseTime {
+    while ($true) {
+        $leaseHours = Read-Host "Ingresa el tiempo de concesión (en horas, ej. 24)"
+
+        if ($leaseHours -match '^\d+$' -and [int]$leaseHours -gt 0) {
+            return New-TimeSpan -Hours $leaseHours
+        }
+
+        Write-Host "[ERROR] Ingresa un número válido mayor que 0"
+    }
+}
+
+
 Function ConfigureDhcpServer () {
     Write-WColor Green "Configurando DHCP Server..."
     Write-Host ""
@@ -43,6 +110,16 @@ Function ConfigureDhcpServer () {
     $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial para el rango DHCP"
     $rangoFinal = PromptForValidIpAddress "Ingresa la direccion IP final para el rango DHCP"
     $mascaraSubred = PromptForValidIpAddress "Ingresa la mascara de subred para el rango DHCP"
+
+    $dnsServers = PromptForDnsServers
+    $leaseTime  = PromptForLeaseTime
+
+
+    if (-not (Get-Valid-DhcpNetworkConfig -ServerIp $ipEstatica -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred)) {
+        Write-WColor Red "Configuración de red DHCP inválida. Abortando configuración."
+        exit 1
+    }
+    
 
     if ((Get-NetIPAddress -InterfaceAlias "Ethernet 2" -ErrorAction SilentlyContinue) -eq "") {
         New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength (Get-PrefixLengthFromMask $mascaraSubred)
@@ -71,8 +148,13 @@ Function ConfigureDhcpServer () {
         Add-DhcpServerv4Scope -name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
     }
 
-    #$scopeId = (Get-DhcpServerv4Scope).ScopeId
-    
+
+    $scopeId = (Get-DhcpServerv4Scope).ScopeId
+
+    Set-DhcpServerv4OptionValue -ScopeId $scopeId -DnsServer $dnsServers
+
+# Lease Time
+    Set-DhcpServerv4Scope -ScopeId $scopeId -LeaseDuration $leaseTime
     #Set-DhcpServerv4OptionValue -OptionID 3 -Value $puertaEnlace -ScopeID $scopeId -ComputerName $env:COMPUTERNAME
     #Add-DhcpServerv4ExclusionRange -ScopeID 10.0.0.0 -StartRange 10.0.0.1 -EndRange 10.0.0.15
     #Set-DhcpServerv4OptionValue -OptionID 3 -Value 10.0.0.1 -ScopeID 10.0.0.0 -ComputerName DHCP1.corp.contoso.com
