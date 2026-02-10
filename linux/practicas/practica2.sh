@@ -27,6 +27,7 @@ configurar_dhcp_server() {
     local nombreScope=$(input "Introduce el nombre del scope: ")
     echo "Configurando el servidor DHCP con el scope $nombreScope..."
 
+    sudo systemctl restart NetworkManager
     device="enp0s8"
     con_name=$(nmcli -t -f DEVICE,NAME con show --active | grep $device: | cut -d ':' -f2)
     address=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará el servidor DHCP: ") 
@@ -39,8 +40,8 @@ configurar_dhcp_server() {
 
     sudo nmcli con mod "$con_name" ipv4.addresses $address/$prefix ipv4.gateway $gateway ipv4.method manual 
 
-    sudo ifconfig "$con_name" $address"/"$prefix 
-    
+    sudo ifconfig "$device" $address"/"$prefix 
+ 
     sudo systemctl enable dhcpd
 
     sudo systemctl restart dhcpd
