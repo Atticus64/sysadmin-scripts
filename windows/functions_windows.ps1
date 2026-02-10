@@ -3,6 +3,20 @@ Function Write-WColor ($color, $text) {
     Write-Host -ForegroundColor $color $text -NoNewLine
 }
 
+Function Convert-IpToInt($Ip) {
+
+    $bytes = $Ip.Split('.') | ForEach-Object { [int]$_ }
+    return ($bytes[0] -shl 24) -bor
+           ($bytes[1] -shl 16) -bor
+           ($bytes[2] -shl 8)  -bor
+           $bytes[3]
+}
+
+Function Convert-MaskToInt($Mask) {
+
+    return Convert-IpToInt $Mask
+}
+
 Function GetIpAddress($index) {
     $ip = (Get-NetIPAddress -InterfaceIndex $index -AddressFamily Ipv4).IPAddress
     return $ip
