@@ -39,7 +39,6 @@ Function ConfigureDhcpServer () {
 
     $ipEstatica = PromptForValidIpAddress "Ingresa la direccion IP estatica para el servidor DHCP"
     $puertaEnlace = PromptForValidIpAddress "Ingresa la direccion IP del gateway para el servidor DHCP"
-    $longitudPrefijo = Read-Host "Ingresa la longitud del prefijo (ejemplo: 24 para mascara de subred)"
 
     $nombreScope = Read-Host "Ingresa el nombre del scope DHCP"
     $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial para el rango DHCP"
@@ -47,10 +46,10 @@ Function ConfigureDhcpServer () {
     $mascaraSubred = PromptForValidIpAddress "Ingresa la mascara de subred para el rango DHCP"
 
     if ((Get-NetIPAddress -InterfaceIndex 7 -ErrorAction SilentlyContinue) -eq "") {
-        New-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
+        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 
     } else {
 		Get-NetIPAddress -InterfaceIndex 7 -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
-		New-NetIPAddress -IPAddress $ipEstatica -InterfaceIndex 7 -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $longitudPrefijo
+		New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 
     }
 
 
@@ -73,9 +72,9 @@ Function ConfigureDhcpServer () {
         Add-DhcpServerv4Scope -name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
     }
 
-    $scopeId = (Get-DhcpServerv4Scope).ScopeId
+    #$scopeId = (Get-DhcpServerv4Scope).ScopeId
     
-    Set-DhcpServerv4OptionValue -OptionID 3 -Value $puertaEnlace -ScopeID $scopeId -ComputerName $env:COMPUTERNAME
+    #Set-DhcpServerv4OptionValue -OptionID 3 -Value $puertaEnlace -ScopeID $scopeId -ComputerName $env:COMPUTERNAME
     #Add-DhcpServerv4ExclusionRange -ScopeID 10.0.0.0 -StartRange 10.0.0.1 -EndRange 10.0.0.15
     #Set-DhcpServerv4OptionValue -OptionID 3 -Value 10.0.0.1 -ScopeID 10.0.0.0 -ComputerName DHCP1.corp.contoso.com
     #Set-DhcpServerv4OptionValue -DnsDomain corp.contoso.com -DnsServer 10.0.0.2
@@ -83,9 +82,4 @@ Function ConfigureDhcpServer () {
 
 InstallDhcpServer
 
-
-#rem Configure scope Corpnet2
-#Add-DhcpServerv4Scope -name "Corpnet2" -StartRange 10.0.1.1 -EndRange 10.0.1.254 -SubnetMask 255.255.255.0 -State Active
-#Add-DhcpServerv4ExclusionRange -ScopeID 10.0.1.0 -StartRange 10.0.1.1 -EndRange 10.0.1.15
-#Set-DhcpServerv4OptionValue -OptionID 3 -Value 10.0.1.1 -ScopeID 10.0.1.0 -ComputerName DHCP1.corp.contoso.com
 
