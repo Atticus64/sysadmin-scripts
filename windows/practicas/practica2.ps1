@@ -115,7 +115,18 @@ Function Get-Monitor-Dhcp {
     Write-WColor Cyan "Monitoreando DHCP Server (Ctrl+C para salir)..."
     Write-Host ""
 
-    Get-EventLog -LogName System -Source DHCPServer -Newest 20 -Wait
+    $scopeId = (Get-DhcpServerv4Scope).ScopeId 
+
+    Get-DhcpServerv4Lease -ScopeId $scopeId | Format-Table -AutoSize
+
+    while ($true) {
+        Start-Sleep -Seconds 5
+        Clear-Host
+        Write-WColor Cyan "Monitoreando DHCP Server (Ctrl+C para salir)..."
+        Write-Host ""
+        Get-DhcpServerv4Lease | Format-Table -AutoSize
+    }                                      
+
 }
 
 Function Show-Help {
