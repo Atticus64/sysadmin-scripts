@@ -28,10 +28,10 @@ get_dns_servers() {
 
     while true; do
         read -rp "DNS servers (espacio o coma): " dns_list
-        dns_list=${dns_list//,/ }
+        record_list=${dns_list//,/ }
 
         local ok=true
-        for dns in $dns_list; do
+        for dns in $record_list; do
             valid_ipaddr "$dns" || {
                 echo "[Error] DNS inválido: $dns"
                 ok=false
