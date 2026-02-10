@@ -124,7 +124,7 @@ Function Get-Monitor-Dhcp {
         Clear-Host
         Write-WColor Cyan "Monitoreando DHCP Server (Ctrl+C para salir)..."
         Write-Host ""
-        Get-DhcpServerv4Lease | Format-Table -AutoSize
+        Get-DhcpServerv4Lease -ScopeId $scopeId | Format-Table -AutoSize
     }                                      
 
 }
