@@ -23,6 +23,40 @@ install_dhcp_server() {
     configurar_dhcp_server
 }
 
+get_dns_servers() {
+    local dns_list
+
+    while true; do
+        read -rp "DNS servers (espacio o coma): " dns_list
+        dns_list=${dns_list//,/ }
+
+        local ok=true
+        for dns in $dns_list; do
+            valid_ipaddr "$dns" || {
+                echo "[Error] DNS inválido: $dns"
+                ok=false
+                break
+            }
+        done
+
+        $ok && break
+    done
+
+    echo "$dns_list"
+}
+
+get_lease_time() {
+    local lease
+
+    while true; do
+        read -rp "Lease time en segundos (ej. 86400): " lease
+        [[ "$lease" =~ ^[0-9]+$ && "$lease" -ge 600 ]] && break
+        echo "❌ Lease inválido (mínimo 600s)"
+    done
+
+    echo "$lease"
+}
+
 configurar_dhcp_server() {
     local nombreScope=$(input "Introduce el nombre del scope: ")
     echo "Configurando el servidor DHCP con el scope $nombreScope..."
@@ -38,6 +72,18 @@ configurar_dhcp_server() {
     rango_final=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango final: ")
     network=$(ipcalc -n $address/$prefix | cut -d '=' -f2 )
 
+
+    validate_dhcp_range \
+        "$server_ip" \
+        "$prefix" \
+        "$start_range" \
+        "$end_range" \
+        "$gateway" || exit 1
+
+    dns_servers=$(get_dns_servers)
+    lease_time=$(get_lease_time)
+
+
     sudo nmcli con mod "$con_name" ipv4.addresses $address/$prefix ipv4.gateway $gateway ipv4.method manual 
 
     sudo ifconfig "$device" $address"/"$prefix 
@@ -49,13 +95,14 @@ configurar_dhcp_server() {
     mv /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf-$(date +%Y%m%d%H%M%S).bak
 
     cat <<EOF > /etc/dhcp/dhcpd.conf
-    default-lease-time 600;
-    max-lease-time 7200;
-    option domain-name-servers 8.8.8.8, 8.8.4.4;
+    default-lease-time $lease_time;
+    max-lease-time $lease_time;
+    option domain-name-servers $dns_servers;
 
     subnet $network netmask $mask {
       range $rango_inicial $rango_final;
       option routers $gateway;
+      option domain-name "$nombreScope";
     }
 EOF
 
@@ -67,9 +114,9 @@ EOF
 verificar_instalacion() {
     echo "Verificando instalación de DHCP Server..."
     if check_package_present "dhcp-server"; then
-        echo "✔ dhcp-server está instalado"
+        echo "[OK] dhcp-server está instalado"
     else
-        echo "✖ dhcp-server NO está instalado"
+        echo "[Error] dhcp-server NO está instalado"
     fi
 }
 
@@ -80,13 +127,13 @@ instalar_dependencias() {
     if ! check_package_present "dhcp-server"; then
         install_required_package "dhcp-server"
         if [[ $? -eq 0 ]]; then
-            echo "✔ dhcp-server instalado correctamente"
+            echo "[OK] dhcp-server instalado correctamente"
         else
-            echo "✖ Error al instalar dhcp-server"
+            echo "[Error] Fallo al instalar dhcp-server"
             exit 1
         fi
     else
-        echo "✔ dhcp-server ya está instalado"
+        echo "dhcp-server ya está instalado"
     fi
 }
 
@@ -95,7 +142,6 @@ monitorear_dhcp() {
     sudo journalctl -u dhcpd -f
 }
 
-# ========= MENU =========
 
 mostrar_menu() {
     echo ""

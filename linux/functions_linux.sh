@@ -53,6 +53,40 @@ install_required_package() {
     return 0
 }
 
+get_network() {
+    local ip=$1
+    local prefix=$2
+    ipcalc -n "$ip/$prefix" | awk -F= '/Network/ {print $2}'
+}
+
+ip_in_network() {
+    local ip=$1
+    local network=$2
+    local prefix=$3
+
+    ipcalc -c "$ip" "$network/$prefix" >/dev/null 2>&1
+}
+
+validate_dhcp_range() {
+    local server_ip=$1
+    local prefix=$2
+    local start_ip=$3
+    local end_ip=$4
+    local gateway=$5
+
+    local network
+    network=$(get_network "$server_ip" "$prefix")
+
+    for ip in "$start_ip" "$end_ip" "$gateway"; do
+        if ! ip_in_network "$ip" "$network" "$prefix"; then
+            echo "La IP $ip no pertenece a la red $network/$prefix"
+            return 1
+        fi
+    done
+}
+
+
+
 
 imprimir_info() {
 	nombre_equipo=$(hostname)
