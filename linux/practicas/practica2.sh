@@ -32,14 +32,14 @@ configurar_dhcp_server() {
     address=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará el servidor DHCP: ") 
     gateway=$(get_valid_ipaddr "Ingresa la dirección IPv4 que asignará al Gateway: ") 
     mask=$(get_valid_ipaddr "Ingresa la mascara de subred: ")
-    prefix=$(ipcalc -p "$mask" | cut -d= -f2)
+    prefix=$(ipcalc -p 0.0.0.0 "$mask" | cut -d= -f2)
     rango_inicial=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango inicial: ")
     rango_final=$(get_valid_ipaddr "Ingresa la dirección IPv4 del rango final: ")
     network=$(ipcalc -n $address/$prefix | cut -d '=' -f2 )
 
-    sudo nmcli con mod $con_name ipv4.addresses $address"/"$prefix ipv4.gateway $gateway ipv4.method manual 
+    sudo nmcli con mod "$con_name" ipv4.addresses $address/$prefix ipv4.gateway $gateway ipv4.method manual 
 
-    sudo ifconfig $con_name $address"/"$prefix 
+    sudo ifconfig "$con_name" $address"/"$prefix 
     
     sudo systemctl enable dhcpd
 
