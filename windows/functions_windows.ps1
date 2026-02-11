@@ -5,9 +5,14 @@ Function Write-WColor ($color, $text) {
 
 Function Convert-IpToInt($Ip) {
 
-    $num = [IPAddress]::HostToNetworkOrder([BitConverter]::ToInt32([IPAddress]::Parse($Ip).GetAddressBytes(), 0))
+    Try {
 
-    return $num
+        $num = [IPAddress]::HostToNetworkOrder([BitConverter]::ToInt32([IPAddress]::Parse($Ip).GetAddressBytes(), 0))
+        return $num
+    } Catch {
+        return 0
+    }
+
 }
 
 function Get-NetworkAddress($Ip, $Mask) {

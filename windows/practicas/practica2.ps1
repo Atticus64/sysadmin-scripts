@@ -105,38 +105,44 @@ Function ConfigureDhcpServer () {
     Write-WColor Green "Configurando DHCP Server..."
     Write-Host ""
 
+    $validInputs = $false   
+
     $nombreScope = Read-Host "Ingresa el nombre del scope DHCP"
 
-    $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial del rango DHCP"
-    $rangoFinal   = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
+    while (-not $validInputs) {
+         $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial del rango DHCP"
+         $rangoFinal   = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
     
-    $networkInicial = Get-NetworkAddress -Ip $rangoInicial -Mask $mascaraSubred
-    $networkFinal   = Get-NetworkAddress -Ip $rangoFinal -Mask $mascaraSubred
-    
-    while ($networkInicial -ne $networkFinal) {
-        Write-WColor Red "Las IPs del rango no pertenecen al mismo segmento de red."
-        $rangoFinal = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
-        $networkFinal = Get-NetworkAddress -Ip $rangoFinal -Mask $mascaraSubred
-    }
-    
-    
-    $intInicial = Convert-IPToInt $rangoInicial
-    $intFinal   = Convert-IPToInt $rangoFinal
+        do {
+            $mascaraSubred = Read-Host "Ingresa la mascara de subred"
+            if (-not (Test-SubnetMask $mascaraSubred)) {
+                Write-WColor Red "Mascara invalida."
+            }
+        } until (Test-SubnetMask $mascaraSubred)
 
-    if (($intFinal - $intInicial) -lt 2) {
-        Write-WColor Red "El rango debe tener minimo 2 IPs de diferencia."
-        exit 1
-    }
+        $validInputs = Get-Valid-DhcpNetworkConfig -ServerIp $rangoInicial -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred
 
-    do {
-        $mascaraSubred = Read-Host "Ingresa la mascara de subred"
-        if (-not (Test-SubnetMask $mascaraSubred)) {
-            Write-WColor Red "Mascara invalida."
+        $networkInicial = Get-NetworkAddress -Ip $rangoInicial -Mask $mascaraSubred
+        $networkFinal   = Get-NetworkAddress -Ip $rangoFinal -Mask $mascaraSubred
+
+        while ($networkInicial -ne $networkFinal) {
+            Write-WColor Red "Las IPs del rango no pertenecen al mismo segmento de red."
+            $rangoFinal = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
+            $networkFinal = Get-NetworkAddress -Ip $rangoFinal -Mask $mascaraSubred
         }
-    } until (Test-SubnetMask $mascaraSubred)
+        
+        $intInicial = Convert-IPToInt $rangoInicial
+        $intFinal   = Convert-IPToInt $rangoFinal
 
-    $prefixLength = (Get-PrefixLengthFromMask $mascaraSubred)
+        if (($intFinal - $intInicial) -lt 2) {
+            Write-WColor Red "El rango debe tener minimo 2 IPs de diferencia."
+            continue
+        }
+    
+        $prefixLength = (Get-PrefixLengthFromMask $mascaraSubred)
 
+        $validInputs = $true
+    }   
 
     $ipEstatica = $rangoInicial
     $nuevoInicioPool = Convert-IntToIP ($intInicial + 1)
