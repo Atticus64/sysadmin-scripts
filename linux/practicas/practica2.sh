@@ -122,7 +122,9 @@ configurar_dhcp_server() {
     dns_servers=$(get_dns_servers)
     lease_time=$(get_lease_time)
 
-    sudo nmcli con mod "$con_name" ipv4.addresses $address/$prefix ipv4.gateway $gateway ipv4.method manual 
+    if [[ -n "$gateway" ]]; then
+        sudo nmcli con mod "$con_name" ipv4.addresses $address/$prefix ipv4.gateway $gateway ipv4.method manual 
+    fi
 
     sudo ifconfig "$device" $address"/"$prefix 
  
