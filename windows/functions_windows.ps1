@@ -12,6 +12,15 @@ Function Convert-IpToInt($Ip) {
            $bytes[3]
 }
 
+function Get-NetworkAddress($Ip, $Mask) {
+
+    $ipInt   = Convert-IPToInt $Ip
+    $maskInt = Convert-IPToInt $Mask
+
+    $networkInt = $ipInt -band $maskInt
+    return Convert-IntToIP $networkInt
+}
+
 Function Test-SubnetMask($mask) {
     if (-not ([System.Net.IPAddress]::TryParse($mask, [ref]([System.Net.IPAddress]$null)))) {
         return $false

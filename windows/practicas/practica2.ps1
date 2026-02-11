@@ -85,13 +85,15 @@ Function PromptForDnsServers {
     }
 }
 
-
 Function PromptForLeaseTime {
-    while ($true) {
-        $leaseHours = Read-Host "Ingresa el tiempo de concesión (en horas, ej. 24)"
 
-        if ($leaseHours -match '^\d+$' -and [int]$leaseHours -gt 0) {
-            return New-TimeSpan -Hours $leaseHours
+    while ($true) {
+
+        $leaseSeconds = Read-Host "Ingresa el tiempo de concesión (en segundos, ej. 86400)"
+
+        if ($leaseSeconds -match '^\d+$' -and [int64]$leaseSeconds -gt 0) {
+
+            return New-TimeSpan -Seconds $leaseSeconds
         }
 
         Write-Host "[ERROR] Ingresa un número válido mayor que 0"
@@ -107,15 +109,24 @@ Function ConfigureDhcpServer () {
 
     $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial del rango DHCP"
     $rangoFinal   = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
-
+    
+    $networkInicial = Get-NetworkAddress -Ip $rangoInicial -Mask $mascaraSubred
+    $networkFinal   = Get-NetworkAddress -Ip $rangoFinal -Mask $mascaraSubred
+    
+    while ($networkInicial -ne $networkFinal) {
+        Write-WColor Red "Las IPs del rango no pertenecen al mismo segmento de red."
+        $rangoFinal = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
+        $networkFinal = Get-NetworkAddress -Ip $rangoFinal -Mask $mascaraSubred
+    }
+    
+    
     $intInicial = Convert-IPToInt $rangoInicial
     $intFinal   = Convert-IPToInt $rangoFinal
 
     if (($intFinal - $intInicial) -lt 2) {
         Write-WColor Red "El rango debe tener minimo 2 IPs de diferencia."
-        return
+        exit 1
     }
-
 
     do {
         $mascaraSubred = Read-Host "Ingresa la mascara de subred"
