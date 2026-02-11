@@ -12,6 +12,27 @@ Function Convert-IpToInt($Ip) {
            $bytes[3]
 }
 
+Function Test-SubnetMask($mask) {
+    if (-not ([System.Net.IPAddress]::TryParse($mask, [ref]([System.Net.IPAddress]$null)))) {
+        return $false
+    }
+
+    $bytes = $mask.Split('.') | ForEach-Object {
+        [Convert]::ToString($_, 2).PadLeft(8, '0')
+    }
+
+    $binary = $bytes -join ''
+    return ($binary -match '^1+0+$')
+}
+
+Function Convert-IntToIP($int) {
+    return "$(($int -shr 24) -band 255)." +
+    "$(($int -shr 16) -band 255)." +
+    "$(($int -shr 8) -band 255)." +
+    "$($int -band 255)"
+}
+ 
+
 Function Convert-MaskToInt($Mask) {
 
     return Convert-IpToInt $Mask

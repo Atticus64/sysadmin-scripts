@@ -103,63 +103,90 @@ Function ConfigureDhcpServer () {
     Write-WColor Green "Configurando DHCP Server..."
     Write-Host ""
 
-    $ipEstatica = PromptForValidIpAddress "Ingresa la direccion IP estatica para el servidor DHCP"
-    $puertaEnlace = PromptForValidIpAddress "Ingresa la direccion IP del gateway para el servidor DHCP"
-
     $nombreScope = Read-Host "Ingresa el nombre del scope DHCP"
-    $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial para el rango DHCP"
-    $rangoFinal = PromptForValidIpAddress "Ingresa la direccion IP final para el rango DHCP"
-    $mascaraSubred = PromptForValidIpAddress "Ingresa la mascara de subred para el rango DHCP"
 
+    $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial del rango DHCP"
+    $rangoFinal   = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
+
+    $intInicial = Convert-IPToInt $rangoInicial
+    $intFinal   = Convert-IPToInt $rangoFinal
+
+    if (($intFinal - $intInicial) -lt 2) {
+        Write-WColor Red "El rango debe tener minimo 2 IPs de diferencia."
+        return
+    }
+
+
+    do {
+        $mascaraSubred = Read-Host "Ingresa la mascara de subred"
+        if (-not (Test-SubnetMask $mascaraSubred)) {
+            Write-WColor Red "Mascara invalida."
+        }
+    } until (Test-SubnetMask $mascaraSubred)
+
+    $prefixLength = (Get-PrefixLengthFromMask $mascaraSubred)
+
+
+    $ipEstatica = $rangoInicial
+    $nuevoInicioPool = Convert-IntToIP ($intInicial + 1)
+
+
+    $puertaEnlace = Read-Host "Ingresa la direccion IP del gateway [opcional]"
+    if ($puertaEnlace) {
+        while (-not ([System.Net.IPAddress]::TryParse($puertaEnlace, [ref]([System.Net.IPAddress]$null)))) {
+            Write-WColor Red "Gateway invalido."
+            $puertaEnlace = Read-Host "Ingresa la direccion IP del gateway [opcional]"
+            if (-not $puertaEnlace) { break }
+        }
+    }
+
+  
     $dnsServers = PromptForDnsServers
-    $leaseTime  = PromptForLeaseTime
 
 
-    if (-not (Get-Valid-DhcpNetworkConfig -ServerIp $ipEstatica -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred)) {
-        Write-WColor Red "Configuración de red DHCP inválida. Abortando configuración."
-        exit 1
-    }
-    
+    $leaseTime = PromptForLeaseTime
 
-    if ((Get-NetIPAddress -InterfaceAlias "Ethernet 2" -ErrorAction SilentlyContinue) -eq "") {
-        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength (Get-PrefixLengthFromMask $mascaraSubred)
-    } else {
-		Get-NetIPAddress -InterfaceAlias "Ethernet 2" -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
-		New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias "Ethernet 2" -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength (Get-PrefixLengthFromMask $mascaraSubred)
+    $interface = "Ethernet 2"
+
+    if (Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue) {
+        Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
     }
 
+    if ($puertaEnlace) {
+        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $prefixLength
+    }
+    else {
+        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -AddressFamily IPv4 -PrefixLength $prefixLength
+    }
 
-    #Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses $ipEstatica
-    
-    #netsh dhcp add securitygroups
     Restart-Service dhcpserver
-    #$nombre = hostname
-    
-    
-    Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
-    
-    #Set-DhcpServerv4DnsSetting -ComputerName "DHCP1.corp.contoso.com" -DynamicUpdates "Always" -DeleteDnsRRonLeaseExpiry $True
 
-    if (-not (Get-DhcpServerv4Scope -ErrorAction SilentlyContinue)) {
-        Add-DhcpServerv4Scope -name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
-    } else { 
-    	$scopeIdToDelete = (Get-DhcpServerv4Scope).ScopeId
-		Remove-DhcpServerv4Scope -ScopeId $scopeIdToDelete -Confirm:$false -Force
-        Add-DhcpServerv4Scope -name $nombreScope -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
+    Set-ItemProperty Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
+
+
+    if (Get-DhcpServerv4Scope -ErrorAction SilentlyContinue) {
+        $scopeIdToDelete = (Get-DhcpServerv4Scope).ScopeId
+        Remove-DhcpServerv4Scope -ScopeId $scopeIdToDelete -Confirm:$false -Force
     }
 
+
+    Add-DhcpServerv4Scope -Name $nombreScope -StartRange $nuevoInicioPool -EndRange $rangoFinal -SubnetMask $mascaraSubred -State Active
 
     $scopeId = (Get-DhcpServerv4Scope).ScopeId
 
-    Set-DhcpServerv4OptionValue -ScopeId $scopeId -DnsServer $dnsServers
+    if ($dnsServers) {
+        Set-DhcpServerv4OptionValue -ScopeId $scopeId -DnsServer $dnsServers
+    }
 
-# Lease Time
+    if ($puertaEnlace) {
+        Set-DhcpServerv4OptionValue -ScopeId $scopeId -Router $puertaEnlace
+    }
+
     Set-DhcpServerv4Scope -ScopeId $scopeId -LeaseDuration $leaseTime
-    #Set-DhcpServerv4OptionValue -OptionID 3 -Value $puertaEnlace -ScopeID $scopeId -ComputerName $env:COMPUTERNAME
-    #Add-DhcpServerv4ExclusionRange -ScopeID 10.0.0.0 -StartRange 10.0.0.1 -EndRange 10.0.0.15
-    #Set-DhcpServerv4OptionValue -OptionID 3 -Value 10.0.0.1 -ScopeID 10.0.0.0 -ComputerName DHCP1.corp.contoso.com
-    #Set-DhcpServerv4OptionValue -DnsDomain corp.contoso.com -DnsServer 10.0.0.2
+
+    Write-WColor Green "Servidor DHCP configurado correctamente."
 }
+
 
 Function Get-DhcpInstallation {
     Write-WColor Cyan "Verificando instalacion de DHCP Server..."
