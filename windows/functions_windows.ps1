@@ -5,11 +5,12 @@ Function Write-WColor ($color, $text) {
 
 Function Convert-IpToInt($Ip) {
 
-    $bytes = $Ip.Split('.') | ForEach-Object { [int]$_ }
-    return ($bytes[0] -shl 24) -bor
-           ($bytes[1] -shl 16) -bor
-           ($bytes[2] -shl 8)  -bor
-           $bytes[3]
+    $ipObj = [System.Net.IPAddress]::Parse($Ip)
+    $bytes = $ipObj.GetAddressBytes()
+
+    [Array]::Reverse($bytes) 
+
+    return [BitConverter]::ToUInt32($bytes, 0)
 }
 
 function Get-NetworkAddress($Ip, $Mask) {
