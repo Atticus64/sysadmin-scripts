@@ -96,7 +96,18 @@ configurar_dhcp_server() {
         done
     fi
 
-    #mask=$(get_valid_ipaddr "Ingresa la mascara de subred: ")
+    address=$()
+
+    IFS=. read -r o1 o2 o3 o4 <<< "$rango_inicial"
+
+    if (( o4 >= 254 )); then
+        echo "No se puede incrementar la IP inicial"
+        exit 1
+    fi
+
+    address="$rango_inicial"
+    rango_inicial="$o1.$o2.$o3.$((o4 + 1))"
+
     prefix=$(ipcalc -p 0.0.0.0 "$mask" | cut -d= -f2)
     network=$(ipcalc -n $address/$prefix | cut -d '=' -f2 )
 

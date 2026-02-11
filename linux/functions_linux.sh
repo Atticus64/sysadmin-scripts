@@ -135,8 +135,13 @@ validate_ip_range() {
     local ip1_num=$(ip_to_num "$ip1")
     local ip2_num=$(ip_to_num "$ip2")
 
-    if [[ $ip1_num -gt $ip2_num ]]; then
+    if (( $ip1_num > $ip2_num )); then
         echo "La IP inicial debe ser menor o igual a la IP final"
+        return 1
+    fi
+
+    if (( ip2_num - ip1_num < 2 )); then
+        echo "El rango debe permitir al menos una IP para DHCP después de reservar el servidor."
         return 1
     fi
 
