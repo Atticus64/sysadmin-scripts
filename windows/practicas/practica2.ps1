@@ -68,6 +68,9 @@ Function Get-Valid-DhcpNetworkConfig($ServerIp, $StartRange, $EndRange, $SubnetM
 Function PromptForDnsServers {
     while ($true) {
         $dnsInput = Read-Host "Ingresa los DNS servers (separados por coma)"
+        if (! $dnsInput) {
+            break
+        }
         $dnsServers = $dnsInput -split "," | ForEach-Object { $_.Trim() }
 
         $valid = $true
