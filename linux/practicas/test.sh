@@ -14,7 +14,7 @@ check_cowsay() {
   fi
 
 
-  cowsay "El server esta andando!"
+  cowsay "Vi una vaca vestida de uniforme"
 }
 
 
