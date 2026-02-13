@@ -1,4 +1,6 @@
 
+. "$PSScriptRoot\..\functions_windows.ps1"
+
 Function Get-StatusCmd($cmd) {
 
     Try {
