@@ -31,3 +31,4 @@ Function InstallCowsay {
 }
 
 
+InstallCowsay
