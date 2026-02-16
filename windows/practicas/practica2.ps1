@@ -160,12 +160,6 @@ Function ConfigureDhcpServer () {
         }
     }
 
-  
-    $dnsServers = PromptForDnsServers
-
-
-    $leaseTime = PromptForLeaseTime
-
     $interface = "Ethernet 2"
 
     if (Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue) {
@@ -178,6 +172,12 @@ Function ConfigureDhcpServer () {
     else {
         New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -AddressFamily IPv4 -PrefixLength $prefixLength
     }
+
+    $dnsServers = PromptForDnsServers
+
+
+    $leaseTime = PromptForLeaseTime
+
 
     Restart-Service dhcpserver
 
