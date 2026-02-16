@@ -137,11 +137,12 @@ Function Add-DnsDomain {
 
 Function Get-DnsDomains {
     Write-WColor Green "Obteniendo dominios del DNS Server"
+    write-Host ""
     $zones = Get-DnsServerZone | Where-Object IsAutoCreated -ne $true
 
     foreach ($zone in $zones) {
-        $recordA = Get-DnsServerResourceRecord -ZoneName $zone -RRType "A" | Where-Object { $_.HostName -eq "@" }
-        $recordCName = Get-DnsServerResourceRecord -ZoneName $zone -RRType "CNAME"
+        $recordA = Get-DnsServerResourceRecord -ZoneName $zone.ZoneName -RRType "A" | Where-Object { $_.HostName -eq "@" }
+        $recordCName = Get-DnsServerResourceRecord -ZoneName $zone.ZoneName -RRType "CNAME"
         Write-Host "Zona: $($zone.ZoneName)"    
         if ($recordA) {
             Write-Host "Registro A: $($recordA.RecordData.IPv4Address)"
