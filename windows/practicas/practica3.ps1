@@ -110,9 +110,50 @@ Function Add-DnsDomain {
     Write-WColor Green "Agregando dominio al DNS Server..."
     Write-Host ""
 
-    # TODO: Agregar dominio al DNS Server 
+    $NombreDominio = Read-Host "Ingrese el nombre del dominio a agregar (ejemplo: reprobados.com)"
+
+    while (-not (ValidDomain $NombreDominio)) {
+        Write-WColor Red "Nombre de dominio no valido. Asegurate de ingresar un nombre de dominio correcto."
+        $NombreDominio = Read-Host "Ingrese el nombre del dominio a agregar (ejemplo: reprobados.com)"  
+    }
+
+    $IpAddr = (Get-NetIPAddress -AddressFamily Ipv4 -InterfaceAlias "Ethernet 2").IPAddress
+
+    if (-not (ValidIpAddress $IpAddr)) {
+        Write-WColor Red "No se pudo obtener la Ip fija"
+        Write-Host "Asegurate de tener una IP fija configurada en la interfaz de red y vuelve a intentarlo!" 
+        exit 1       
+    }
+    Write-Host "[OK] " -NoNewline
+    Write-WColor Blue "Agregando dominio A y CNAME para $NombreDominio con IP $IpAddr"
+    
+    Add-DnsServerPrimaryZone -Name $NombreDominio -zonefile "$NombreDominio.dns"
+    Add-DnsServerResourceRecordA -Name "@" -ZoneName $NombreDominio -Ipv4Address $IpAddr
+    Add-DnsServerResourceRecordCName -Name "www" -ZoneName $NombreDominio -HostNameAlias "$NombreDominio"
 
     Write-WColor Green "Dominio agregado correctamente."
+}
+
+
+Function Get-DnsDomains {
+    Write-WColor Green "Obteniendo dominios del DNS Server"
+    $zones = Get-DnsServerZone | Where-Object IsAutoCreated -ne $true
+
+    foreach ($zone in $zones) {
+        $recordA = Get-DnsServerResourceRecord -ZoneName $zone -RRType "A" | Where-Object { $_.HostName -eq "@" }
+        $recordCName = Get-DnsServerResourceRecord -ZoneName $zone -RRType "CNAME"
+        Write-Host "Zona: $($zone.ZoneName)"    
+        if ($recordA) {
+            Write-Host "Registro A: $($recordA.RecordData.IPv4Address)"
+        }
+        if ($recordCName) {
+            foreach ($cname in $recordCName) {
+                Write-Host "Registro CNAME: $($cname.HostName) -> $($cname.RecordData.HostNameAlias)"
+            }
+        }
+        Write-Host ""
+    }   
+
 }
 
 Function Remove-DnsDomain {
@@ -125,8 +166,6 @@ Function Remove-DnsDomain {
 }
 
 
-
-
 Function Show-Help {
 @"
 Uso:
@@ -136,6 +175,7 @@ Opciones:
   --check        Verifica si el rol DNS Server esta instalado.
   --install      Instala el rol DNS Server y herramientas administrativas.
   --config       Configura el servidor DNS solicitando los datos de red.
+  --list         Muestra los dominios configurados en el servidor DNS.
   --add          Agregar un dominio al servidor DNS
   --remove       Eliminar un dominio del servidor DNS
   --help         Muestra esta ayuda y sale.
@@ -159,9 +199,10 @@ Function Show-Menu {
     Write-Host "1) Verificar instalacion"
     Write-Host "2) Instalar DNS Server"
     Write-Host "3) Configurar DNS"
-    Write-Host "4) Agregar dominio"
-    Write-Host "5) Eliminar dominio"
-    Write-Host "6) Salir"
+    Write-Host "4) Listar dominios"
+    Write-Host "5) Agregar dominio"
+    Write-Host "6) Eliminar dominio"
+    Write-Host "7) Salir"
     Write-Host "============================="
 }
 
@@ -174,9 +215,10 @@ Function Show-Interactive-Menu () {
             1 { Get-DnsInstallation }
             2 { Install-DnsDependencies }
             3 { AdministrateDNSServer }
-            4 { Add-DnsDomain }
-            5 { Remove-DnsDomain }
-            6 { Write-Host "Saliendo..."; exit 0 }
+            4 { Get-DnsDomains }
+            5 { Add-DnsDomain }
+            6 { Remove-DnsDomain }
+            7 { Write-Host "Saliendo..."; exit 0 }
             default { Write-Host "Opcion invalida" }
         }
     }

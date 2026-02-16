@@ -37,6 +37,19 @@ Function Test-SubnetMask($mask) {
     return ($binary -match '^1+0+$')
 }
 
+Function ValidInput($inputUser, $rule) {
+
+    if ($inputUser -match $rule) {
+        return $true
+    } else {
+        return $false
+    }
+}
+
+Function ValidDomain($domainName) {
+    return ValidInput $domainName "^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$"
+}
+
 Function Convert-IntToIP($int) {
     return "$(($int -shr 24) -band 255)." +
     "$(($int -shr 16) -band 255)." +
