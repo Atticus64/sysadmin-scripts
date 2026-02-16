@@ -161,7 +161,27 @@ Function Remove-DnsDomain {
     Write-WColor Green "Eliminando dominio del DNS Server..."
     Write-Host ""
 
-    # TODO: Eliminar dominio del DNS Server 
+
+    if (-not (Get-DnsServerZone -ErrorAction SilentlyContinue)) {
+        Write-WColor Red "No hay dominios configurados en el DNS Server."
+        return
+    }
+
+    $NombreDominio = Read-Host "Ingrese el nombre del dominio a eliminar (ejemplo: reprobados.com)"
+
+    while (-not (ValidDomain $NombreDominio)) {
+        Write-WColor Red "Nombre de dominio no valido. Asegurate de ingresar un nombre de dominio correcto."
+        $NombreDominio = Read-Host "Ingrese el nombre del dominio a eliminar (ejemplo: reprobados.com)"  
+    }
+
+    if (-not (Get-DnsServerZone -Name $NombreDominio -ErrorAction SilentlyContinue)) {
+        Write-WColor Red "El dominio" 
+        Write-Host "$NombreDominio" -NoNewline 
+        Write-WColor Red " no existe en el DNS Server."
+        return
+    } 
+
+    Remove-DnsServerZone -Name $NombreDominio -Force
 
     Write-WColor Green "Dominio eliminado correctamente."
 }
@@ -230,6 +250,7 @@ Function Main($arguments) {
         "--check"   { Get-DnsInstallation }
         "--install" { Install-DnsDependencies }
         "--config"  { AdministrateDNSServer }
+        "--list"    { Get-DnsDomains }
         "--add"     { Add-DnsDomain }
         "--remove"  { Remove-DnsDomain }
         "--help"    { Show-Help }
