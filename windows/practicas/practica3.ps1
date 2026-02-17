@@ -126,6 +126,7 @@ Function Add-DnsDomain {
     }
     Write-Host "[OK] " -NoNewline
     Write-WColor Blue "Agregando dominio A y CNAME para $NombreDominio con IP $IpAddr"
+    write-Host ""
     
     Add-DnsServerPrimaryZone -Name $NombreDominio -zonefile "$NombreDominio.dns"
     Add-DnsServerResourceRecordA -Name "@" -ZoneName $NombreDominio -Ipv4Address $IpAddr
