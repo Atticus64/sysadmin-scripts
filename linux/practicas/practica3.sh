@@ -53,7 +53,7 @@ instalar_dependencias() {
 listar_dominios() {
     echo "Listando dominios configurados en el servidor DNS..."
 
-    $path = "/etc/bind/zones/"
+    path="/etc/bind/zones/"
 
     if [ -d "$path" ]; then
         echo "Dominios configurados:"
@@ -76,9 +76,7 @@ agregar_dominio() {
 
     ip_dominio=$(get_valid_ipaddr "Ingresa la IPv4 para el dominio: ")
 
-    if [ -d "/etc/bind/zones" ]; then
-        # ya existe el directorio, 
-    else
+    if ! [[ -d "/etc/bind/zones" ]]; then
         sudo mkdir -p "/etc/bind/zones"
     fi  
 
