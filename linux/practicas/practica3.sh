@@ -130,8 +130,19 @@ agregar_dominio() {
     echo "Agregando nuevo dominio al servidor DNS..."   
     # TODO: implementar agregar dominio
     dominio=$(input "Ingresa el nombre del dominio a agregar: ")
+    ip_dominio=$(input "Ingresa la IPv4 para el dominio (default server): ")
 
-    ip_dominio=$(get_valid_ipaddr "Ingresa la IPv4 para el dominio: ")
+    # la ip es opcional 
+    if [[ -z "$ip_dominio" ]]; then
+        ip_dominio=$(ip -br addr show enp0s8 | awk '{print $3}' | cut -d'/' -f1)
+    fi
+
+    while [[ -z "$dominio" ]]; do
+        echo "Error: El nombre del dominio no pueden estar vacío"
+        dominio=$(input "Ingresa el nombre del dominio a agregar: ")
+    done  
+
+   
 
     if ! [[ -d "/etc/bind/zones" ]]; then
         sudo mkdir -p "/etc/bind/zones"
