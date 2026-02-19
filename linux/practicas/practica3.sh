@@ -125,6 +125,17 @@ eliminar_dominio() {
 
         dominio=$(input "Ingresa el nombre del dominio a eliminar: ")
         sudo rm -f "/etc/bind/zones/$dominio.zone"
+
+        # eliminar zona de archivo zones
+
+        $name_file=$(ls /etc/ | grep zones)
+
+        $zones_file="/etc/$name_file"
+
+        sudo cp "$zones_file" "$zones_file.bak"
+
+        sudo sed -i "/zone \"$dominio\" IN {/,/};/d" $zones_file 
+
         sudo systemctl restart named
     else
         echo "No se encontró el directorio de zonas: /etc/bind/zones"
