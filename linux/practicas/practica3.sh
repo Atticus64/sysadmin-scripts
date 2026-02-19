@@ -3,8 +3,7 @@
 
 install_bind_service() {
 
-    #check_DNS=$(check_package_present "DNS-server")
-    #echo $check_DNS
+    #check_DNS=$(check_package_present "bind")
     install_required_package "ipcalc"
     install_required_package "bind-utils"
 
@@ -28,9 +27,9 @@ install_bind_service() {
 verificar_instalacion() {
     echo "Verificando instalación de DNS Server..."
     if check_package_present "bind"; then
-        echo "[OK] DNS-server está instalado"
+        echo "[OK] DNS service está instalado"
     else
-        echo "[Error] DNS-server NO está instalado"
+        echo "[Error] DNS service NO está instalado"
     fi
 }
 
@@ -53,17 +52,73 @@ instalar_dependencias() {
 
 listar_dominios() {
     echo "Listando dominios configurados en el servidor DNS..."
-    # TODO: implementar lista
+
+    $path = "/etc/bind/zones/"
+
+    if [ -d "$path" ]; then
+        echo "Dominios configurados:"
+        for file in "$path"/*; do
+            if [ -f "$file" ]; then
+                echo "- $(basename "$file")"
+            fi
+        done
+    else
+        echo "No se encontró el directorio de zonas: $path"
+        echo "Creando directorio"
+        sudo mkdir -p "$path"
+    fi
 }
 
 agregar_dominio() {
     echo "Agregando nuevo dominio al servidor DNS..."   
     # TODO: implementar agregar dominio
+    dominio=$(input "Ingresa el nombre del dominio a agregar: ")
+
+    ip_dominio=$(get_valid_ipaddr "Ingresa la IPv4 para el dominio: ")
+
+    if [ -d "/etc/bind/zones" ]; then
+        # ya existe el directorio, 
+    else
+        sudo mkdir -p "/etc/bind/zones"
+    fi  
+
+    sudo touch /etc/bind/zones/$dominio.zone
+
+    {
+        echo "\$TTL 604800"
+        echo "@ IN SOA ns.$dominio. root.$dominio. ("
+        echo "    2;"
+        echo "    604800;"
+        echo "    86400;"
+        echo "    2419200;"
+        echo "    604800)" 
+        echo ";"
+        echo "@ IN NS $dominio."
+        echo "@ IN A $ip_dominio"
+        echo "www IN CNAME $dominio."
+    } > "/etc/bind/zones/$dominio.zone"
+
+    sudo systemctl restart named
 }
 
 eliminar_dominio() {
-    echo "Eliminando un dominio del servidor DNS..."    
-    # TODO: implementar eliminar dominio
+    echo "Eliminando un dominio del servidor DNS" 
+
+    if [ -d "/etc/bind/zones" ]; then
+        echo "Dominios configurados:"
+        for file in "/etc/bind/zones/"*; do
+            if [ -f "$file" ]; then
+                echo "- $(basename "$file")"
+            fi
+        done
+
+        dominio=$(input "Ingresa el nombre del dominio a eliminar: ")
+        sudo rm -f "/etc/bind/zones/$dominio.zone"
+        sudo systemctl restart named
+    else
+        echo "No se encontró el directorio de zonas: /etc/bind/zones"
+    fi      
+
 }
 
 mostrar_menu() {
