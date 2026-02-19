@@ -98,6 +98,17 @@ agregar_dominio() {
         echo "www IN CNAME $dominio."
     } > "/etc/bind/zones/$dominio.zone"
 
+    $name_file=$(ls /etc/ | grep zones)
+    $zones_file="/etc/$name_file"
+    
+
+    {
+        echo "zone \"$dominio\" IN {"
+        echo "    type master;"
+        echo "    file \"/etc/bind/zones/$dominio.zone\";"
+        echo "}"
+    } >> $zones_file
+
     sudo systemctl restart named
 }
 
