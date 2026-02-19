@@ -96,8 +96,8 @@ agregar_dominio() {
         echo "www IN CNAME $dominio."
     } > "/etc/bind/zones/$dominio.zone"
 
-    $name_file=$(ls /etc/ | grep zones)
-    $zones_file="/etc/$name_file"
+    name_file=$(ls /etc/ | grep zones)
+    zones_file="/etc/$name_file"
     
 
     {
@@ -126,9 +126,9 @@ eliminar_dominio() {
 
         # eliminar zona de archivo zones
 
-        $name_file=$(ls /etc/ | grep zones)
+        name_file=$(ls /etc/ | grep zones)
 
-        $zones_file="/etc/$name_file"
+        zones_file="/etc/$name_file"
 
         sudo cp "$zones_file" "$zones_file.bak"
 
