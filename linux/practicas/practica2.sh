@@ -124,6 +124,11 @@ configurar_dhcp_server() {
 
     if [[ -n "$gateway" ]]; then
         sudo nmcli con mod "$con_name" ipv4.addresses $address/$prefix ipv4.gateway $gateway ipv4.method manual 
+    else 
+        #sudo ifconfig $device $address netmask $mask  
+        sudo nmcli con mod "$con_name" ipv4.addresses $address/$prefix ipv4.method manual   
+        sudo ip addr add $address/$prefix dev $device
+        sudo route add --net $network netmask $mask dev $device
     fi
 
     sudo ifconfig "$device" $address"/"$prefix 
