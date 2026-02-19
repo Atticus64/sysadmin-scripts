@@ -98,12 +98,12 @@ agregar_dominio() {
 
     name_file=$(ls /etc/ | grep zones)
 
-    {
-        echo "zone \"$dominio\" IN {"
-        echo "    type master;"
-        echo "    file \"/etc/bind/zones/$dominio.zone\";"
-        echo "}"
-    } >> "/etc/$name_file"
+    cat <<EOF >> "/etc/$name_file"
+zone "$dominio" IN {
+    type master;
+    file "/etc/bind/zones/$dominio.zone";
+};
+EOF
 
     sudo systemctl restart named
 }
