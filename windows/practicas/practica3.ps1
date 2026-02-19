@@ -117,7 +117,24 @@ Function Add-DnsDomain {
         $NombreDominio = Read-Host "Ingrese el nombre del dominio a agregar (ejemplo: reprobados.com)"  
     }
 
-    $IpAddr = (Get-NetIPAddress -AddressFamily Ipv4 -InterfaceAlias "Ethernet 2").IPAddress
+    while ($true) {
+        $inputIp = Read-Host "Ingrese la Ip para el domino:"
+    
+        if (-not $inputIp) {
+            $IpAddr = (Get-NetIPAddress -AddressFamily Ipv4 -InterfaceAlias "Ethernet 2").IPAddress
+            break
+        } else {
+            if (ValidIpAddress $inputIp) {
+                $IpAddr = $inputIp
+                break
+            } else {
+                Write-WColor Red "Direccion IP invalida"
+                Write-Host "Asegurate de ingresar una direccion IP valida o deja el campo vacio"
+            }
+        }
+
+    }
+
 
     if (-not (ValidIpAddress $IpAddr)) {
         Write-WColor Red "No se pudo obtener la Ip fija"
