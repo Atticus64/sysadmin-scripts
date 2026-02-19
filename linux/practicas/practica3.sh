@@ -31,6 +31,60 @@ verificar_instalacion() {
     else
         echo "[Error] DNS service NO está instalado"
     fi
+
+    verificar_setup
+}
+
+
+verificar_setup() {
+    echo "Verificando configuración del servidor DNS..."
+
+    # checar si ya tiene allow query y listen port
+    query=$(sudo grep 'allow-query  * { any; };' /etc/named.conf)  
+    listenp=$(sudo grep 'listen-on port 53 { any; };' /etc/named.conf)
+    if [[ -n "$query" && -n "$listenp" ]]; then
+        echo "[OK] Configuración de named.conf ya tiene allow-query y listen-on configurados"
+    else
+        sudo sed -i '/options {/,/};/ s/allow-query {.*};/allow-query { any; };/' /etc/named.conf
+        sudo sed -i '/options {/,/};/ s/listen-on port .*;/listen-on port 53 { any; };/' /etc/named.conf
+    fi 
+
+    sudo named-checkconf /etc/named.conf
+    if [[ $? -eq 0 ]]; then
+        echo "[OK] Configuración de named.conf es válida"
+    else
+        echo "[Error] Configuración de named.conf es inválida"
+        exit 1
+    fi
+
+    state_ip=$(ip -br addr show enp0s8 | awk '{print $2}')
+    ip_value=$(ip -br addr show enp0s8 | awk '{print $3}')
+
+
+    if [[ "$state_ip" == "UP" && -n "$ip_value" ]]; then
+        echo "[OK] Interfaz enp0s8 está activa y tiene una dirección IP asignada"
+    else
+        echo "[Error] Interfaz enp0s8 no está activa o no tiene una dirección IP asignada"
+
+        ip_new=$(input "Ingresa una dirección IP válida para la interfaz enp0s8: ")
+        prefix=$(input "Ingresa el prefijo de la máscara de subred (24)")
+
+        network=$(ipcalc -n $ip_new | awk -F= '{print $2}')
+        mascara=$(ipcalc -m $ip_new/$prefix | awk -F= '{print $2}') 
+        sudo ip addr add $ip_new/$prefix dev enp0s8
+        sudo route add --net $network netmask $mascara dev enp0s8
+
+        exit 1
+    fi
+
+    services=$(sudo firewall-cmd --list-services | grep -w "dns")
+
+    if [[ -z "$services" ]]; then
+        sudo firewall-cmd --add-service=dns --permanent
+        sudo firewall-cmd --reload
+    fi
+
+    sudo systemctl restart named
 }
 
 instalar_dependencias() {
@@ -48,6 +102,9 @@ instalar_dependencias() {
     else
         echo "bind ya está instalado"
     fi
+
+
+    verificar_setup
 }
 
 listar_dominios() {
@@ -96,7 +153,7 @@ agregar_dominio() {
         echo "www IN CNAME $dominio."
     } > "/etc/bind/zones/$dominio.zone"
 
-    name_file=$(ls /etc/ | grep zones)
+    name_file=$(ls /etc/ | grep zones | grep -n 1)
 
     cat <<EOF >> "/etc/$name_file"
 zone "$dominio" IN {
@@ -124,13 +181,13 @@ eliminar_dominio() {
 
         # eliminar zona de archivo zones
 
-        name_file=$(ls /etc/ | grep zones)
+        name_file=$(ls /etc/ | grep zones | head -n 1)
 
         zones_file="/etc/$name_file"
 
-        rm -f $zones_file.bak 2>/dev/null
+        #rm -f $zones_file.bak 2>/dev/null
 
-        sudo cp $zones_file $zones_file.bak
+        #sudo cp $zones_file $zones_file.bak
 
         sudo sed -i "/zone \"$dominio\" IN {/,/};/d" $zones_file 
 
