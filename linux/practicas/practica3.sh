@@ -153,7 +153,7 @@ agregar_dominio() {
         echo "www IN CNAME $dominio."
     } > "/etc/bind/zones/$dominio.zone"
 
-    name_file=$(ls /etc/ | grep zones | grep -n 1)
+    name_file=$(ls /etc/ | grep zones | head -n 1)
 
     cat <<EOF >> "/etc/$name_file"
 zone "$dominio" IN {
