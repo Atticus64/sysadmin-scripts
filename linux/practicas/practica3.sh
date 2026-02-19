@@ -128,7 +128,9 @@ eliminar_dominio() {
 
         zones_file="/etc/$name_file"
 
-        sudo cp "$zones_file" "$zones_file.bak"
+        rm -f $zones_file.bak 2>/dev/null
+
+        sudo cp $zones_file $zones_file.bak
 
         sudo sed -i "/zone \"$dominio\" IN {/,/};/d" $zones_file 
 
