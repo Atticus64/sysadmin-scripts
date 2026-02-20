@@ -168,18 +168,18 @@ Function ConfigureDhcpServer () {
     Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue | Remove-NetIPAddress -Confirm:$false
     Get-NetRoute -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue | Remove-NetRoute -Confirm:$false
 
-    if ($puertaEnlace) {
+    if (-not $puertaEnlace) {
         New-NetIPAddress `
-            -InterfaceAlias $interface `
-            -IPAddress $ipEstatica `
-            -PrefixLength $prefixLength `
-            -DefaultGateway $puertaEnlace
+        -InterfaceAlias $interface `
+        -IPAddress $ipEstatica `
+        -PrefixLength $prefixLength 
     }
     else {
         New-NetIPAddress `
             -InterfaceAlias $interface `
             -IPAddress $ipEstatica `
-            -PrefixLength $prefixLength
+            -PrefixLength $prefixLength `
+            -DefaultGateway $puertaEnlace
     }
 
 
@@ -190,9 +190,6 @@ Function ConfigureDhcpServer () {
 
 
     Restart-Service dhcpserver
-
-    Set-ItemProperty Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
-
 
     if (Get-DhcpServerv4Scope -ErrorAction SilentlyContinue) {
         $scopeIdToDelete = (Get-DhcpServerv4Scope).ScopeId
@@ -205,6 +202,11 @@ Function ConfigureDhcpServer () {
     $scopeId = (Get-DhcpServerv4Scope).ScopeId
 
     if ($dnsServers) {
+        if (-not (CheckWindowsFeature "DNS")) {
+            Write-WColor Yellow "DNS Server no esta instalado."
+            Install-WindowsFeature DNS -IncludeManagementTools -Confirm
+        } 
+
         Set-DhcpServerv4OptionValue -ScopeId $scopeId -DnsServer $dnsServers
         Set-DnsClientServerAddress -InterfaceAlias $interface -ServerAddresses $dnsServers
     }

@@ -73,20 +73,17 @@ Function CheckWindowsFeature($name) {
     return $feature.Installed
 }
 
-function Get-PrefixLengthFromMask($SubnetMask) {
+function Get-PrefixLengthFromMask($mask) {
 
-    # Convertir la mascara a numero de 32 bits
-    $maskBytes = ($SubnetMask -split '\.') -as [byte[]]
-    [uint32]$maskInt = ($maskBytes[0] -shl 24) + ($maskBytes[1] -shl 16) + ($maskBytes[2] -shl 8) + $maskBytes[3]
-
-    $prefixLength = 0
-    # iterar 32 veces, haciendo un shift a la derecha, sacando el bit menos significativo 
-    for ($i = 0; $i -lt 32; $i++) {
-        if (($maskInt -band 1) -eq 1) {
-            $prefixLength++
-        }
-        $maskInt = $maskInt -shr 1
+    $netMaskIP = [IPAddress]$mask
+    $binaryString = [String]::Empty
+    $netMaskIP.GetAddressBytes() | ForEach-Object {
+        # Convert each byte to its binary string representation and append to $binaryString
+        $binaryString += [Convert]::ToString($_, 2).PadLeft(8, '0')
     }
+
+    # The prefix length is the count of leading '1' bits
+    $prefixLength = $binaryString.TrimEnd('0').Length
 
     return $prefixLength
 }
