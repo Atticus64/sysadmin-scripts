@@ -35,58 +35,72 @@ verificar_instalacion() {
     verificar_setup
 }
 
-
 verificar_setup() {
     echo "Verificando configuración del servidor DNS..."
 
-    # checar si ya tiene allow query y listen port
-    query=$(sudo grep 'allow-query  * { any; };' /etc/named.conf)  
-    listenp=$(sudo grep 'listen-on port 53 { any; };' /etc/named.conf)
-    v6listen=$(sudo grep 'listen-on-v6 port 53 { any; };' /etc/named.conf)
-    if [[ -n "$query" && -n "$listenp" && -n "$v6listen" ]]; then
-        echo "[OK] Configuración de named.conf ya tiene allow-query, listen-on y listen-on-v6 configurados"
-    else
-        sudo sed -i '/options {/,/};/ s/allow-query {.*};/allow-query { any; };/' /etc/named.conf
-        sudo sed -i '/options {/,/};/ s/listen-on port .*;/listen-on port 53 { any; };/' /etc/named.conf
-        sudo sed -i '/options {/,/};/ s/listen-on-v6 port .*;/listen-on-v6 port 53 { any; };/' /etc/named.conf
-    fi 
+    if grep -q "allow-query { any; };" /etc/named.conf &&
+       grep -q "listen-on port 53 { any; };" /etc/named.conf &&
+       grep -q "listen-on-v6 port 53 { any; };" /etc/named.conf; then
 
-    sudo named-checkconf /etc/named.conf
-    if [[ $? -eq 0 ]]; then
+        echo "[OK] Configuración de named.conf ya tiene allow-query y listen configurados"
+
+    else
+        echo "Actualizando bloque options en named.conf..."
+
+        # Eliminar configuraciones previas dentro del bloque options
+        sudo sed -i '/options {/,/};/ {
+            /allow-query/d
+            /listen-on port/d
+            /listen-on-v6/d
+        }' /etc/named.conf
+
+        # Insertar configuración correcta después de options {
+        sudo sed -i '/options {/a\
+    allow-query { any; };\
+    listen-on port 53 { any; };\
+    listen-on-v6 port 53 { any; };' /etc/named.conf
+
+        echo "[OK] Bloque options actualizado correctamente"
+    fi
+
+    # Validar configuración
+    if sudo named-checkconf /etc/named.conf; then
         echo "[OK] Configuración de named.conf es válida"
     else
         echo "[Error] Configuración de named.conf es inválida"
         exit 1
     fi
 
+    # Verificar interfaz
     state_ip=$(ip -br addr show enp0s8 | awk '{print $2}')
     ip_value=$(ip -br addr show enp0s8 | awk '{print $3}')
 
-
     if [[ "$state_ip" == "UP" && -n "$ip_value" ]]; then
-        echo "[OK] Interfaz enp0s8 está activa y tiene una dirección IP asignada"
+        echo "[OK] Interfaz enp0s8 está activa y tiene IP asignada"
     else
-        echo "[Error] Interfaz enp0s8 no está activa o no tiene una dirección IP asignada"
+        echo "[Error] Interfaz enp0s8 no está activa o sin IP"
 
         ip_new=$(input "Ingresa una dirección IP válida para la interfaz enp0s8: ")
-        prefix=$(input "Ingresa el prefijo de la máscara de subred (24)")
+        prefix=$(input "Ingresa el prefijo de la máscara (ej. 24): ")
 
-        network=$(ipcalc -n $ip_new | awk -F= '{print $2}')
-        mascara=$(ipcalc -m $ip_new/$prefix | awk -F= '{print $2}') 
+        network=$(ipcalc -n $ip_new/$prefix | awk -F= '{print $2}')
+        mascara=$(ipcalc -m $ip_new/$prefix | awk -F= '{print $2}')
+
         sudo ip addr add $ip_new/$prefix dev enp0s8
         sudo route add --net $network netmask $mascara dev enp0s8
 
         exit 1
     fi
 
-    services=$(sudo firewall-cmd --list-services | grep -w "dns")
-
-    if [[ -z "$services" ]]; then
+    # Verificar firewall
+    if ! sudo firewall-cmd --list-services | grep -qw dns; then
         sudo firewall-cmd --add-service=dns --permanent
         sudo firewall-cmd --reload
+        echo "[OK] Servicio DNS agregado al firewall"
     fi
 
     sudo systemctl restart named
+    echo "[OK] Servicio named reiniciado"
 }
 
 instalar_dependencias() {
