@@ -42,11 +42,13 @@ verificar_setup() {
     # checar si ya tiene allow query y listen port
     query=$(sudo grep 'allow-query  * { any; };' /etc/named.conf)  
     listenp=$(sudo grep 'listen-on port 53 { any; };' /etc/named.conf)
-    if [[ -n "$query" && -n "$listenp" ]]; then
-        echo "[OK] Configuración de named.conf ya tiene allow-query y listen-on configurados"
+    v6listen=$(sudo grep 'listen-on-v6 port 53 { any; };' /etc/named.conf)
+    if [[ -n "$query" && -n "$listenp" && -n "$v6listen" ]]; then
+        echo "[OK] Configuración de named.conf ya tiene allow-query, listen-on y listen-on-v6 configurados"
     else
         sudo sed -i '/options {/,/};/ s/allow-query {.*};/allow-query { any; };/' /etc/named.conf
         sudo sed -i '/options {/,/};/ s/listen-on port .*;/listen-on port 53 { any; };/' /etc/named.conf
+        sudo sed -i '/options {/,/};/ s/listen-on-v6 port .*;/listen-on-v6 port 53 { any; };/' /etc/named.conf
     fi 
 
     sudo named-checkconf /etc/named.conf
@@ -194,13 +196,12 @@ eliminar_dominio() {
 
         name_file=$(ls /etc/ | grep zones | head -n 1)
 
-        zones_file="/etc/$name_file"
 
         #rm -f $zones_file.bak 2>/dev/null
 
-        #sudo cp $zones_file $zones_file.bak
+        sudo cp /etc/$name_file /etc/$name_file.bak
 
-        sudo sed -i "/zone \"$dominio\" IN {/,/};/d" $zones_file 
+        sudo sed -i "/zone \"$dominio\" IN {/,/};/d" /etc/$name_file 
 
         sudo systemctl restart named
     else
