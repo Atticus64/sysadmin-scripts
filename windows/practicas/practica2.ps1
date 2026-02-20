@@ -106,6 +106,36 @@ Function PromptForLeaseTime {
 }
 
 
+Function SetIpServer($ip, $prefix) {
+
+    $adapter = Get-NetAdapter -Name "Ethernet 2" -ErrorAction SilentlyContinue
+
+
+    if (-not $adapter) {
+        Write-Host "No se encontro la interfaz de red!"
+        exit 1
+    }
+
+    Get-NetIPAddress -InterfaceIndex $adapter.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue | Remove-NetIPAddress -Confirm:$false
+
+    New-NetIPAddress `
+        -IPAddress $ip `
+        -PrefixLength $prefix `
+        -InterfaceIndex $adapter.InterfaceIndex
+
+}
+
+Function SetInterface {
+    $bindings = Get-DhcpServerv4Binding
+    foreach ($bind in $bindings) {
+        Set-DhcpServerv4Binding `
+            -InterfaceAlias $.InterfaceAlias `
+            -BindingState ($b.InterfaceAlias -eq "Ethernet 2")
+    }
+
+    Restart-Service DHCPServer
+}
+
 Function ConfigureDhcpServer () {
     Write-WColor Green "Configurando DHCP Server..."
     Write-Host ""
@@ -163,25 +193,15 @@ Function ConfigureDhcpServer () {
 
     $interface = "Ethernet 2"
 
+    SetIpServer $ipEstatica $prefixLength
 
-    if (Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue) {
-        Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
-    }
-
-    if ($puertaEnlace) {
-        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $prefixLength
-    }
-    else {
-        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -AddressFamily IPv4 -PrefixLength $prefixLength
-    }
+    SetInterface 
 
     $dnsServers = PromptForDnsServers
 
 
     $leaseTime = PromptForLeaseTime
 
-
-    Restart-Service dhcpserver
 
     if (Get-DhcpServerv4Scope -ErrorAction SilentlyContinue) {
         $scopeIdToDelete = (Get-DhcpServerv4Scope).ScopeId
@@ -208,6 +228,7 @@ Function ConfigureDhcpServer () {
     }
 
     Set-DhcpServerv4Scope -ScopeId $scopeId -LeaseDuration $leaseTime
+    Restart-Service dhcpserver
 
     Write-WColor Green "Servidor DHCP configurado correctamente."
 }
