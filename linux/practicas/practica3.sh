@@ -47,15 +47,19 @@ verificar_setup() {
     else
         echo "Actualizando bloque options en named.conf..."
 
-        # Eliminar configuraciones previas dentro del bloque options
-        sudo sed -i '/options {/,/};/ {
-            /allow-query/d
-            /listen-on port/d
-            /listen-on-v6/d
-        }' /etc/named.conf
+        sudo sed -i '
+/^[[:space:]]*options[[:space:]]*{/ {
+    :a
+    n
+    /^[[:space:]]*};/ b
+    /allow-query/d
+    /listen-on port/d
+    /listen-on-v6/d
+    ba
+}
+' /etc/named.conf
 
-        # Insertar configuración correcta después de options {
-        sudo sed -i '/options {/a\
+        sudo sed -i '/^[[:space:]]*options[[:space:]]*{/a\
     allow-query { any; };\
     listen-on port 53 { any; };\
     listen-on-v6 port 53 { any; };' /etc/named.conf
