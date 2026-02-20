@@ -146,7 +146,6 @@ Function ConfigureDhcpServer () {
     
         $prefixLength = (Get-PrefixLengthFromMask $mascaraSubred)
 
-        $validInputs = $true
     }   
 
     $ipEstatica = $rangoInicial
@@ -164,24 +163,17 @@ Function ConfigureDhcpServer () {
 
     $interface = "Ethernet 2"
 
-    Set-NetIPInterface -InterfaceAlias $interface -Dhcp Disabled
-    Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue | Remove-NetIPAddress -Confirm:$false
-    Get-NetRoute -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue | Remove-NetRoute -Confirm:$false
 
-    if (-not $puertaEnlace) {
-        New-NetIPAddress `
-        -InterfaceAlias $interface `
-        -IPAddress $ipEstatica `
-        -PrefixLength $prefixLength 
+    if (Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue) {
+        Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
+    }
+
+    if ($puertaEnlace) {
+        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $prefixLength
     }
     else {
-        New-NetIPAddress `
-            -InterfaceAlias $interface `
-            -IPAddress $ipEstatica `
-            -PrefixLength $prefixLength `
-            -DefaultGateway $puertaEnlace
+        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -AddressFamily IPv4 -PrefixLength $prefixLength
     }
-
 
     $dnsServers = PromptForDnsServers
 
