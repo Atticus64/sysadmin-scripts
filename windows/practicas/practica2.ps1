@@ -14,14 +14,16 @@ Function InstallDhcpServer() {
             Write-WColor Green "DHCP Server instalado correctamente."  
             Write-Host ""
             #ConfigureDhcpServer
-        } else {
+        }
+        else {
             Write-WColor Red "Error al instalar DHCP Server."  
             Write-Host ""
             exit 1
         }
 
 
-    } else {
+    }
+    else {
         Write-WColor Yellow "DHCP Server ya esta instalado."  
         Write-Host ""
     }
@@ -35,11 +37,11 @@ Function InstallDhcpServer() {
 Function Get-Valid-DhcpNetworkConfig($ServerIp, $StartRange, $EndRange, $SubnetMask) {
     
     $serverInt = Convert-IpToInt $ServerIp
-    $startInt  = Convert-IpToInt $StartRange
-    $endInt    = Convert-IpToInt $EndRange
-    $maskInt   = Convert-MaskToInt $SubnetMask
+    $startInt = Convert-IpToInt $StartRange
+    $endInt = Convert-IpToInt $EndRange
+    $maskInt = Convert-MaskToInt $SubnetMask
 
-    $networkInt   = $serverInt -band $maskInt
+    $networkInt = $serverInt -band $maskInt
     $broadcastInt = $networkInt -bor (-bnot $maskInt)
 
 
@@ -113,8 +115,8 @@ Function ConfigureDhcpServer () {
     $nombreScope = Read-Host "Ingresa el nombre del scope DHCP"
 
     while (-not $validInputs) {
-         $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial del rango DHCP"
-         $rangoFinal   = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
+        $rangoInicial = PromptForValidIpAddress "Ingresa la direccion IP inicial del rango DHCP"
+        $rangoFinal = PromptForValidIpAddress "Ingresa la direccion IP final del rango DHCP"
     
         do {
             $mascaraSubred = Read-Host "Ingresa la mascara de subred"
@@ -126,7 +128,7 @@ Function ConfigureDhcpServer () {
         $validInputs = Get-Valid-DhcpNetworkConfig -ServerIp $rangoInicial -StartRange $rangoInicial -EndRange $rangoFinal -SubnetMask $mascaraSubred
 
         $networkInicial = Get-NetworkAddress -Ip $rangoInicial -Mask $mascaraSubred
-        $networkFinal   = Get-NetworkAddress -Ip $rangoFinal -Mask $mascaraSubred
+        $networkFinal = Get-NetworkAddress -Ip $rangoFinal -Mask $mascaraSubred
 
         while ($networkInicial -ne $networkFinal) {
             Write-WColor Red "Las IPs del rango no pertenecen al mismo segmento de red."
@@ -135,7 +137,7 @@ Function ConfigureDhcpServer () {
         }
         
         $intInicial = Convert-IPToInt $rangoInicial
-        $intFinal   = Convert-IPToInt $rangoFinal
+        $intFinal = Convert-IPToInt $rangoFinal
 
         if (($intFinal - $intInicial) -lt 2) {
             Write-WColor Red "El rango debe tener minimo 2 IPs de diferencia."
@@ -162,16 +164,24 @@ Function ConfigureDhcpServer () {
 
     $interface = "Ethernet 2"
 
-    if (Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue) {
-        Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
-    }
+    Set-NetIPInterface -InterfaceAlias $interface -Dhcp Disabled
+    Get-NetIPAddress -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue | Remove-NetIPAddress -Confirm:$false
+    Get-NetRoute -InterfaceAlias $interface -AddressFamily IPv4 -ErrorAction SilentlyContinue | Remove-NetRoute -Confirm:$false
 
     if ($puertaEnlace) {
-        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -DefaultGateway $puertaEnlace -AddressFamily IPv4 -PrefixLength $prefixLength
+        New-NetIPAddress `
+            -InterfaceAlias $interface `
+            -IPAddress $ipEstatica `
+            -PrefixLength $prefixLength `
+            -DefaultGateway $puertaEnlace
     }
     else {
-        New-NetIPAddress -IPAddress $ipEstatica -InterfaceAlias $interface -AddressFamily IPv4 -PrefixLength $prefixLength
+        New-NetIPAddress `
+            -InterfaceAlias $interface `
+            -IPAddress $ipEstatica `
+            -PrefixLength $prefixLength
     }
+
 
     $dnsServers = PromptForDnsServers
 
@@ -196,6 +206,7 @@ Function ConfigureDhcpServer () {
 
     if ($dnsServers) {
         Set-DhcpServerv4OptionValue -ScopeId $scopeId -DnsServer $dnsServers
+        Set-DnsClientServerAddress -InterfaceAlias $interface -ServerAddresses $dnsServers
     }
 
     if ($puertaEnlace) {
@@ -214,7 +225,8 @@ Function Get-DhcpInstallation {
 
     if (CheckWindowsFeature "DHCP") {
         Write-WColor Green "DHCP Server esta instalado"
-    } else {
+    }
+    else {
         Write-WColor Red "DHCP Server NO esta instalado"
     }
     Write-Host ""
@@ -229,11 +241,13 @@ Function Install-DhcpDependencies {
 
         if (CheckWindowsFeature "DHCP") {
             Write-WColor Green "DHCP Server instalado correctamente"
-        } else {
+        }
+        else {
             Write-WColor Red "Error al instalar DHCP Server"
             exit 1
         }
-    } else {
+    }
+    else {
         Write-WColor Yellow "DHCP Server ya esta instalado"
     }
 
@@ -259,7 +273,7 @@ Function Get-Monitor-Dhcp {
 }
 
 Function Show-Help {
-@"
+    @"
 Uso:
   practica2.ps1 [OPCION]
 
@@ -312,12 +326,12 @@ Function Show-Interactive-Menu () {
 
 Function Main($arguments) {
     switch ($arguments[0]) {
-        "--check"   { Get-DhcpInstallation }
+        "--check" { Get-DhcpInstallation }
         "--install" { Install-DhcpDependencies }
-        "--config"  { ConfigureDhcpServer }
+        "--config" { ConfigureDhcpServer }
         "--monitor" { Get-Monitor-Dhcp }
-        "--help"    { Show-Help }
-        $null       { Show-Interactive-Menu }
+        "--help" { Show-Help }
+        $null { Show-Interactive-Menu }
         default {
             Write-Host "Opcion no valida. Usa --help para ver las opciones disponibles."
             exit 1
