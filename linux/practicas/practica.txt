@@ -42,7 +42,7 @@ get_dns_servers() {
         $ok && break
     done
 
-    echo "$dns_list"
+    echo "$record_list"
 }
 
 get_lease_time() {
@@ -130,28 +130,25 @@ configurar_dhcp_server() {
     fi
 
     sudo nmcli con up "$con_name"
+    #sudo ifconfig "$device" $address"/"$prefix 
  
     sudo systemctl enable dhcpd
 
     mv /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf-$(date +%Y%m%d%H%M%S).bak
 
-    {
-        echo "default-lease-time $lease_time;"
-        echo "max-lease-time $lease_time;"
 
-        [[ -n "$dns_servers" ]] && \
-            echo "option domain-name-servers $dns_servers;"
+    cat > /etc/dhcp/dhcpd.conf <<EOF
+default-lease-time $lease_time;
+max-lease-time $lease_time;
+authoritative;
 
-        echo ""
-        echo "subnet $network netmask $mask {"
-        echo "  range $rango_inicial $rango_final;"
-
-        [[ -n "$gateway" ]] && \
-            echo "  option routers $gateway;"
-
-        echo "  option domain-name \"$nombreScope\";"
-        echo "}"
-    } > /etc/dhcp/dhcpd.conf
+subnet $network netmask $mask {
+    range $rango_inicial $rango_final;
+    $( [ ! -z "$gateway" ] && echo "option routers $gateway;" )
+    $( [ ! -z "$dns_servers" ] && echo "option domain-name-servers $dns_servers;" )
+    option domain-name "$nombreScope";
+} 
+EOF
    
     sudo systemctl restart dhcpd
 
