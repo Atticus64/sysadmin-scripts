@@ -66,18 +66,16 @@ Function Get-Valid-DhcpNetworkConfig($ServerIp, $StartRange, $EndRange, $SubnetM
     return $true
 }
 
-
 Function PromptForDnsServers {
     while ($true) {
         $dnsInput = Read-Host "Ingresa los DNS servers (separados por coma)"
-        if (! $dnsInput) {
-            break
-        }
+        if (-not $dnsInput) { return @() }
+
         $dnsServers = $dnsInput -split "," | ForEach-Object { $_.Trim() }
 
         $valid = $true
         foreach ($dns in $dnsServers) {
-            if (-not (Test-Connection -ComputerName $dns -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
+            if (-not (ValidIpAddress $dns)) {
                 Write-Host "[ERROR] DNS inválido: $dns"
                 $valid = $false
                 break
@@ -129,8 +127,8 @@ Function SetInterface {
     $bindings = Get-DhcpServerv4Binding
     foreach ($bind in $bindings) {
         Set-DhcpServerv4Binding `
-            -InterfaceAlias $.InterfaceAlias `
-            -BindingState ($b.InterfaceAlias -eq "Ethernet 2")
+            -InterfaceAlias $bind.InterfaceAlias `
+            -BindingState ($bind.InterfaceAlias -eq "Ethernet 2")
     }
 
     Restart-Service DHCPServer
@@ -205,7 +203,7 @@ Function ConfigureDhcpServer () {
 
     if (Get-DhcpServerv4Scope -ErrorAction SilentlyContinue) {
         $scopeIdToDelete = (Get-DhcpServerv4Scope).ScopeId
-        Remove-DhcpServerv4Scope -ScopeId $scopeIdToDelete -Confirm:$false -Force
+        Remove-DhcpServerv4Scope -ScopeId $scopeIdToDelete -Confirm:$false -Force -ErrorAction SilentlyContinue
     }
 
 
@@ -219,8 +217,8 @@ Function ConfigureDhcpServer () {
             Install-WindowsFeature DNS -IncludeManagementTools -Confirm
         } 
 
-        Set-DhcpServerv4OptionValue -ScopeId $scopeId -DnsServer $dnsServers
-        Set-DnsClientServerAddress -InterfaceAlias $interface -ServerAddresses $dnsServers
+        Set-DhcpServerv4OptionValue -ScopeId $scopeId -DnsServer $dnsServers -Force
+        Set-DnsClientServerAddress -InterfaceAlias $interface -ServerAddresses $dnsServers -Force
     }
 
     if ($puertaEnlace) {
