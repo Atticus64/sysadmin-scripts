@@ -260,7 +260,7 @@ menu_interactivo() {
 mostrar_help() {
 cat <<EOF
 Uso:
-  practica2.sh [OPCIÓN]
+  practica3.sh [OPCIÓN]
 
 Opciones:
   --check        Verifica si el servicio DNS (bind) está instalado.
@@ -274,12 +274,12 @@ Sin opciones:
   Ejecuta el script en modo interactivo mostrando un menú.
 
 Ejemplos:
-  ./practica2.sh --check
-  ./practica2.sh --install
-  ./practica2.sh --list
-  ./practica2.sh --add
-  ./practica2.sh --rm
-  ./practica2.sh
+  ./practica3.sh --check
+  ./practica3.sh --install
+  ./practica3.sh --list
+  ./practica3.sh --add
+  ./practica3.sh --rm
+  ./practica3.sh
 EOF
 }
 
