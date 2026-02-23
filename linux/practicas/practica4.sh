@@ -76,7 +76,7 @@ instalar_dependencias() {
     fi
 
 
-    verificar_setup
+    verificar_setup_ssh
 }
 
 mostrar_menu() {
@@ -84,8 +84,8 @@ mostrar_menu() {
     echo "========= MENÚ SSH ========="
     echo "1) Verificar instalación"
     echo "2) Instalar dependencias"
-    echo "4) Conectarse a un servidor SSH"
-    echo "6) Salir"
+    echo "3) Conectarse a un servidor SSH"
+    echo "4) Salir"
     echo "============================="
 }
 
@@ -110,8 +110,8 @@ menu_interactivo() {
         case $opcion in
             1) verificar_instalacion ;;
             2) instalar_dependencias ;;
-            4) conectarse_ssh ;;
-            7) echo "Saliendo..."; exit 0 ;;
+            3) conectarse_ssh ;;
+            4) echo "Saliendo..."; exit 0 ;;
             *) echo "Opción inválida" ;;
         esac
     done
