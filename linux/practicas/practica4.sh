@@ -3,7 +3,6 @@
 
 install_ssh_service() {
 
-    #check_DNS=$(check_package_present "bind")
     install_required_package "ipcalc"
 
     if ! check_package_present "openssh-server"; then
@@ -68,11 +67,11 @@ instalar_dependencias() {
         if [[ $? -eq 0 ]]; then
             echo "[OK] openssh-server instalado correctamente"
         else
-            echo "[Error] Fallo al instalar bind"
+            echo "[Error] Fallo al instalar openssh-server"
             exit 1
         fi
     else
-        echo "bind ya está instalado"
+        echo "openssh-server ya está instalado"
     fi
 
 
@@ -91,7 +90,7 @@ mostrar_menu() {
 
 conectarse_ssh() {
     echo "Conexion SSH"
-    server=$(get_valid_ipaddr "Ingresa la dirección IPv4 del servidor SSH a conectarse:")
+    server=$(get_valid_ipaddr "Ingresa la dirección IPv4 del servidor SSH a conectarse: ")
     user=$(input "Ingresa el nombre de usuario para la conexión SSH: ")
 
     while [[ -z "$user" ]]; do
