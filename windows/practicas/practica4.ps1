@@ -29,8 +29,10 @@ Function Get-SSHInstallation {
     $results = Get-WindowsCapability -Online | Where-Object Name -like "OpenSSH.Server*"
     if ($results.Count -gt 0) {
         Write-WColor Green "SSH Server esta instalado"
+        Write-Host ""
     } else {
         Write-WColor Red "SSH Server NO esta instalado"
+        Write-Host ""
         Install-SSHDependencies
     }
     Write-Host ""
@@ -51,6 +53,7 @@ Function Install-SSHDependencies {
         Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
     } else {
         Write-WColor Yellow "SSH Server ya esta instalado"
+        Write-Host ""
     }
 
     if (-not $client) {
@@ -60,6 +63,7 @@ Function Install-SSHDependencies {
         Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
     } else {
         Write-WColor Yellow "SSH Client ya esta instalado"
+        Write-Host ""
     }
 
     Write-Host ""
@@ -107,7 +111,7 @@ Function Show-Interactive-Menu () {
         switch ($option) {
             1 { Get-SSHInstallation }
             2 { Install-SSHDependencies }
-            3 { ConfigurarSSHServer }
+            3 { Set-ConfigSSHServer }
             4 { Write-Host "Saliendo..."; exit 0 }
             default { Write-Host "Opcion invalida" }
         }
