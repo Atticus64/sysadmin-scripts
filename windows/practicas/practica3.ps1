@@ -32,39 +32,6 @@ Function InstallDNSServer() {
 
 }
 
-Function Get-Valid-DnsNetworkConfig() {
-    
-    #$serverInt = Convert-IpToInt $ServerIp
-    #$startInt  = Convert-IpToInt $StartRange
-    #$endInt    = Convert-IpToInt $EndRange
-    #$maskInt   = Convert-MaskToInt $SubnetMask
-
-    #$networkInt   = $serverInt -band $maskInt
-    #$broadcastInt = $networkInt -bor (-bnot $maskInt)
-
-
-    #if ($startInt -gt $endInt) {
-    #    Write-Host "[ERROR] El rango inicial es mayor que el rango final"
-    #    return $false
-    #}
-
-    #foreach ($ip in @($serverInt, $startInt, $endInt)) {
-    #    if (($ip -band $maskInt) -ne $networkInt) {
-    #        Write-Host "[ERROR] Una IP no pertenece a la misma red"
-    #        return $false
-    #    }
-    #}
-
-    #if ($startInt -le $networkInt -or $endInt -ge $broadcastInt) {
-    #    Write-Host "[ERROR] El rango incluye IP de red o broadcast"
-    #    return $false
-    #}
-
-    Write-Host "[OK] La configuración de red DNS es válida"
-    return $true
-}
-
-
 
 Function AdministrateDNSServer () {
     Write-WColor Green "Configurando DNS Server..."
@@ -149,6 +116,7 @@ Function Add-DnsDomain {
     Add-DnsServerResourceRecordA -Name "@" -ZoneName $NombreDominio -Ipv4Address $IpAddr
     Add-DnsServerResourceRecordCName -Name "www" -ZoneName $NombreDominio -HostNameAlias "$NombreDominio"
 
+    Restart-NetAdapter -Name "Ethernet 2"
     Write-WColor Green "Dominio agregado correctamente."
 }
 
@@ -200,6 +168,7 @@ Function Remove-DnsDomain {
     } 
 
     Remove-DnsServerZone -Name $NombreDominio -Force
+    Restart-NetAdapter -Name "Ethernet 2"
 
     Write-WColor Green "Dominio eliminado correctamente."
 }
