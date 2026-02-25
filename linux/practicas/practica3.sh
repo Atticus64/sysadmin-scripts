@@ -213,14 +213,13 @@ eliminar_dominio() {
         # eliminar zona de archivo zones
 
         name_file=$(ls /etc/ | grep zones | head -n 1)
-
-
-        #rm -f $zones_file.bak 2>/dev/null
+        con_name=$(nmcli -t -f DEVICE,NAME con show --active | grep $device: | cut -d ':' -f2)
 
         sudo cp /etc/$name_file /etc/$name_file.bak
 
         sudo sed -i "/zone \"$dominio\" IN {/,/};/d" /etc/$name_file 
 
+        nmcli con mod up "$con_name"
         sudo systemctl restart named
     else
         echo "No se encontró el directorio de zonas: /etc/bind/zones"

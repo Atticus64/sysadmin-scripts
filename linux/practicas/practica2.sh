@@ -129,6 +129,9 @@ configurar_dhcp_server() {
         sudo route add $network/$prefix dev $device
     fi
 
+    sudo nmcli con mod "$con_name" ipv4.ignore-auto-dns yes
+    sudo nmcli con mod "$con_name" ipv4.dns "$dns_servers"
+
     sudo nmcli con up "$con_name"
  
     sudo systemctl enable dhcpd
