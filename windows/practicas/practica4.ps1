@@ -1,7 +1,7 @@
 
 # Practica SSH Server
 . "$PSScriptRoot\..\functions_windows.ps1"
-. "$PSScriptRoot\..\ssh.ps1"
+. "$PSScriptRoot\..\services\ssh.ps1"
 
 
 Function Show-Help {

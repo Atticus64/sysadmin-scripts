@@ -1,36 +1,4 @@
-
 . "$PSScriptRoot\..\functions_windows.ps1"
-
-Function InstallDNSServer() {
-
-    if (-not (CheckWindowsFeature "DNS")) {
-        Write-WColor Green "Instalando DNS Server..."
-        Write-Host ""
-        Install-WindowsFeature DNS -IncludeManagementTools
-
-        $validInst = CheckWindowsFeature "DNS"
-        if ($validInst) {
-            Write-WColor Green "DNS Server instalado correctamente."  
-            Write-Host ""
-            #ConfigureDnsServer
-        } else {
-            Write-WColor Red "Error al instalar DNS Server."  
-            Write-Host ""
-            exit 1
-        }
-
-
-    } else {
-        Write-WColor Yellow "DNS Server ya esta instalado."  
-        Write-Host ""
-    }
-
-
-    ConfigureDhcpServer
-
-
-}
-
 
 Function AdministrateDNSServer () {
     Write-WColor Green "Configurando DNS Server..."
