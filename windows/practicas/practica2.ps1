@@ -218,7 +218,8 @@ Function ConfigureDhcpServer () {
         } 
 
         Set-DhcpServerv4OptionValue -ScopeId $scopeId -DnsServer $dnsServers -Force
-        Set-DnsClientServerAddress -InterfaceAlias $interface -ServerAddresses $dnsServers -Force
+        Set-DnsClientServerAddress -InterfaceAlias $interface -ServerAddresses $dnsServers 
+        Restart-NetAdapter -Name "Ethernet 2"
     }
 
     if ($puertaEnlace) {
