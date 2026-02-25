@@ -1,4 +1,6 @@
-source ../functions_linux.sh
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
+
+source $SCRIPT_DIR/../functions_linux.sh
 
 install_bind_service() {
 

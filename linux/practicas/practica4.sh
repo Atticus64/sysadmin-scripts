@@ -1,4 +1,5 @@
-source ./services/ssh.sh
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
+source $SCRIPT_DIR/../services/ssh.sh
 
 menu_interactivo() {
     while true; do
