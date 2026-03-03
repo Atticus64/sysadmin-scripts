@@ -83,6 +83,41 @@ check_package_present() {
     rpm -q $name 2>&1 > /dev/null
 }
 
+is_firewall_rule() {
+    service=$1
+    firewall-cmd -q --query-service $service
+    
+}
+
+enable_firewall_rule() {
+    service=$1
+    service_name=$2
+
+  if is_firewall_rule $service; then
+        echo "[OK] El servicio $service_name está permitido en el firewall"
+    else
+        echo "[INFO] Agregando regla para $service_name"
+        firewall-cmd --permanent --add-service=$service 2>&1 > /dev/null
+        firewall-cmd --reload 2>&1 > /dev/null
+  fi
+}
+
+is_enable_service() {   
+    service=$1
+    systemctl is-enabled --quiet "$service";
+}
+
+enable_service() {
+    service=$1
+    service_name=$2
+    if is_enable_service $service; then
+        echo "[OK] El servicio $service_name está habilitado para iniciar al arranque"
+    else
+        echo "Configurando el arranque del servicio $service_name"
+        systemctl enable $service 
+    fi
+}
+
 install_required_package() {
     name=$1
     if ! check_package_present $name; then
