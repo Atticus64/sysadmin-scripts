@@ -10,7 +10,8 @@ mostrar_menu() {
     echo "2) Instalar dependencias"
     echo "3) Agregar usuarios"
     echo "4) Cambiar usuario grupo"
-    echo "5) Salir"
+    echo "5) Listar usuarios"
+    echo "6) Salir"
     echo "============================="
 }
 
@@ -24,7 +25,8 @@ menu_interactivo() {
             2) instalar_dependencias ;;
             3) agregar_usuarios ;;
             4) cambiar_grupo_usuario ;;
-            5) echo "Saliendo..."; exit 0 ;;
+            5) listar_usuarios ;;
+            6) echo "Saliendo..."; exit 0 ;;
             *) echo "Opción inválida" ;;
         esac
     done
@@ -40,16 +42,17 @@ Opciones:
   --install      Instala las dependencias necesarias e instala $package si no existe.
   --add-users    Agregar usuarios a los grupos
   --chuser       Cambiar a un usuario de grupo
+  --ls           Listar los usuarios configurados en FTP 
   --help         Muestra esta ayuda y sale.
 
 Sin opciones:
   Ejecuta el script en modo interactivo mostrando un menú.
 
 Ejemplos:
-  ./practica4.sh --check
-  ./practica4.sh --install
-  ./practica4.sh --add-users
-  ./practica4.sh
+  ./practica5.sh --check
+  ./practica5.sh --install
+  ./practica5.sh --add-users
+  ./practica5.sh
 EOF
 }
 
@@ -67,6 +70,9 @@ main() {
             ;;
         --chuser)
             cambiar_grupo_usuario
+            ;;
+        --ls)
+            listar_usuarios
             ;;
         "")
             menu_interactivo
