@@ -83,6 +83,22 @@ check_package_present() {
     rpm -q $name 2>&1 > /dev/null
 }
 
+add_to_file() {
+    line=$1
+    filename=$2
+
+    if ! contains "$line" $filename; then
+        echo "$line" >> $filename
+    fi
+}
+
+contains() {
+    query=$1
+    file=$2
+
+    grep -q "$query" $file
+}
+
 is_firewall_rule() {
     service=$1
     firewall-cmd -q --query-service $service
